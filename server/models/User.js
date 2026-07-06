@@ -6,19 +6,19 @@ const userSchema = new mongoose.Schema({
   lastName: { type: String, required: true, trim: true },
   email: {
     type: String,
-    required: function() { return this.role !== 'Elder'; },
+    required: true,
     unique: true,
     sparse: true,
     lowercase: true
   },
   password: {
     type: String,
-    required: function() { return this.role !== 'Elder'; },
+    required: true,
     minlength: 6
   },
   role: {
     type: String,
-    enum: ['Admin', 'Customer', 'Caretaker', 'Elder'],
+    enum: ['Admin', 'Customer', 'Caretaker'],
     required: true
   },
   phone: { type: String, default: '' },
@@ -33,9 +33,8 @@ const userSchema = new mongoose.Schema({
     }
   },
   avatar: { type: String, default: '' },
-  isActive: { type: Boolean, default: true },
-  parentCustomer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  relation: { type: String, default: '' }
+  avatarPublicId: { type: String, default: '' },
+  isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 
 // Hash password before saving

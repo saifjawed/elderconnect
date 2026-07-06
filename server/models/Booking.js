@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const bookingSchema = new mongoose.Schema({
   customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  elder: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  elder: { type: mongoose.Schema.Types.ObjectId, ref: 'Elder' },
   caretaker: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   serviceType: { type: String, required: true },
   status: {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/useAuth";
 import {
   Heart,
   Shield,
@@ -103,6 +104,14 @@ const REVIEWS = [
 const LandingPage = () => {
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [fade, setFade] = useState(true);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -151,7 +160,13 @@ const LandingPage = () => {
               <div className="mt-8 flex flex-col sm:flex-row gap-3">
                 <Button
                   size="lg"
-                  onClick={() => (window.location.href = "/register")}
+                  onClick={() => {
+                    if (user && user.role === "Customer") {
+                      navigate("/search");
+                    } else {
+                      navigate("/register");
+                    }
+                  }}
                   className="transition-all duration-300 transform hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:bg-teal-700"
                 >
                   <Search className="h-5 w-5" />
@@ -161,7 +176,7 @@ const LandingPage = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={() => (window.location.href = "/register")}
+                  onClick={() => navigate("/register")}
                   className="transition-all duration-300 transform hover:scale-[1.03] active:scale-95 hover:shadow-md hover:bg-teal-50"
                 >
                   <Briefcase className="h-5 w-5" />
@@ -334,7 +349,13 @@ const LandingPage = () => {
                 <Button
                   variant="secondary"
                   size="lg"
-                  onClick={() => (window.location.href = "/register")}
+                  onClick={() => {
+                    if (user && user.role === "Customer") {
+                      navigate("/search");
+                    } else {
+                      navigate("/register");
+                    }
+                  }}
                 >
                   Get Started Free
                   <ArrowRight className="h-4 w-4" />
@@ -343,7 +364,7 @@ const LandingPage = () => {
                   variant="outline"
                   size="lg"
                   className="border-white text-white hover:bg-white hover:text-teal-700"
-                  onClick={() => (window.location.href = "/login")}
+                  onClick={() => navigate("/login")}
                 >
                   Sign In
                 </Button>

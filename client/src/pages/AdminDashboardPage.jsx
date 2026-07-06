@@ -303,7 +303,7 @@ const BookingRow = ({ booking }) => {
         <Badge variant={variant}>{booking.status}</Badge>
       </td>
       <td className="px-4 py-3 text-sm font-semibold text-gray-900">
-        ${Number(booking.totalAmount || 0).toFixed(2)}
+        ₹{Number(booking.totalAmount || 0).toFixed(2)}
       </td>
     </tr>
   );
@@ -319,6 +319,9 @@ const AdminDashboardPage = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState(null);
+
+  const [pendingVerifications, setPendingVerifications] = useState([]);
+  const [verifyingId, setVerifyingId] = useState(null);
 
   const [userFilter, setUserFilter] = useState("all");
   const [userSearch, setUserSearch] = useState("");
@@ -343,7 +346,7 @@ const AdminDashboardPage = () => {
     else setLoading(true);
     setError(null);
     try {
-      const [usersRes, bookingsRes] = await Promise.all([
+      const [usersRes, bookingsRes, pcRes] = await Promise.all([
         api.get("/users").catch((err) => {
           if (err?.response?.status === 403 || err?.response?.status === 401) {
             throw err;
@@ -351,9 +354,12 @@ const AdminDashboardPage = () => {
           return { data: [] };
         }),
         api.get("/bookings/my-bookings").catch(() => ({ data: [] })),
+        api.get("/caretakers?isVerified=false").catch(() => ({ data: [] })),
       ]);
       const usersData = Array.isArray(usersRes.data) ? usersRes.data : [];
       const bookingsData = Array.isArray(bookingsRes.data) ? bookingsRes.data : [];
+      const pcData = Array.isArray(pcRes.data) ? pcRes.data.filter(c => c.verificationStatus === 'Submitted') : [];
+      setPendingVerifications(pcData);
       if (usersData.length === 0) {
         try {
           const stored = JSON.parse(localStorage.getItem("admin_fallback_users") || "[]");
@@ -505,6 +511,18 @@ const AdminDashboardPage = () => {
     }
   };
 
+  const handleVerify = async (caretakerProfileId, status) => {
+    setVerifyingId(caretakerProfileId);
+    try {
+      await api.put(`/caretakers/${caretakerProfileId}/verify`, { status });
+      setPendingVerifications(prev => prev.filter(c => c._id !== caretakerProfileId));
+    } catch (err) {
+      setActionError("Failed to update verification status");
+    } finally {
+      setVerifyingId(null);
+    }
+  };
+
   const handleDelete = async (targetUser) => {
     if (typeof window !== "undefined") {
       const ok = window.confirm(
@@ -560,7 +578,7 @@ const AdminDashboardPage = () => {
     );
   }
 
-  const totalRevenueDisplay = `$${overview.totalRevenue.toLocaleString(undefined, {
+  const totalRevenueDisplay = `₹${overview.totalRevenue.toLocaleString(undefined, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   })}`;
@@ -688,6 +706,71 @@ const AdminDashboardPage = () => {
             </CardContent>
           </Card>
         </div>
+
+        {pendingVerifications.length > 0 && (
+          <Card className="mb-6 border-orange-200 bg-orange-50/30">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2 text-orange-800">
+                <Shield className="h-4 w-4" />
+                Pending Verifications
+              </CardTitle>
+              <CardDescription className="text-orange-700">
+                Caretakers who have submitted KYC documents.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {pendingVerifications.map(profile => (
+                  <Card key={profile._id} className="border-gray-200 shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3 mb-3">
+                        <Avatar className="h-10 w-10 border border-gray-100 shadow-sm">
+                          {profile.user?.avatar ? <img src={profile.user.avatar} className="object-cover h-full w-full" alt="avatar" /> : <AvatarFallback>{getInitials(profile.user)}</AvatarFallback>}
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="font-semibold truncate">{getFullName(profile.user)}</p>
+                          <p className="text-xs text-gray-500 truncate">{profile.user?.email}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 mb-4">
+                        {profile.kycDocuments?.map((doc, idx) => (
+                          <div key={idx} className="flex items-center justify-between border border-gray-100 rounded bg-gray-50 p-2">
+                            <span className="text-xs font-semibold text-gray-700">{doc.docType}</span>
+                            <a href={doc.url} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-teal-600 text-xs hover:underline">
+                              <Eye className="h-3 w-3" />
+                              View
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200" 
+                          onClick={() => handleVerify(profile._id, 'Rejected')}
+                          disabled={verifyingId === profile._id}
+                        >
+                          Reject
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="w-full bg-teal-600 hover:bg-teal-700" 
+                          onClick={() => handleVerify(profile._id, 'Verified')}
+                          disabled={verifyingId === profile._id}
+                        >
+                          Approve
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="mb-6 border-gray-200">
           <CardHeader>

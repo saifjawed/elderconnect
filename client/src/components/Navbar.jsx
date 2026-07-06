@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Heart, Menu, User, LogOut, LayoutDashboard, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/useAuth";
 
 const Navbar = () => {
@@ -45,7 +46,7 @@ const Navbar = () => {
       <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
+          <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 shadow-sm">
               <Heart className="h-5 w-5 text-white" fill="white" />
             </div>
@@ -54,15 +55,40 @@ const Navbar = () => {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-8">
-            <NavLink to="/" end className={navLinkClass}>
-              Home
-            </NavLink>
-            <a href="#find" className="text-sm font-medium text-gray-700 hover:text-teal-700 transition-colors">
-              Find Caretaker
-            </a>
-            <a href="#how-it-works" className="text-sm font-medium text-gray-700 hover:text-teal-700 transition-colors">
-              How It Works
-            </a>
+            {!user ? (
+              <>
+                <NavLink to="/" end className={navLinkClass}>
+                  Home
+                </NavLink>
+                <a href="/#find" className="text-sm font-medium text-gray-700 hover:text-teal-700 transition-colors">
+                  Find Caretaker
+                </a>
+                <a href="/#how-it-works" className="text-sm font-medium text-gray-700 hover:text-teal-700 transition-colors">
+                  How It Works
+                </a>
+              </>
+            ) : (
+              <>
+                <NavLink to="/dashboard" className={navLinkClass}>
+                  Dashboard
+                </NavLink>
+                {user.role === "Customer" && (
+                  <>
+                    <NavLink to="/search" className={navLinkClass}>Find Caretaker</NavLink>
+                    <NavLink to="/my-bookings" className={navLinkClass}>My Bookings</NavLink>
+                  </>
+                )}
+                {user.role === "Caretaker" && (
+                  <>
+                    <NavLink to="/my-bookings" className={navLinkClass}>My Bookings</NavLink>
+                    <NavLink to="/caretaker/profile/edit" className={navLinkClass}>My Profile</NavLink>
+                  </>
+                )}
+                {user.role === "Admin" && (
+                  <NavLink to="/admin/dashboard" className={navLinkClass}>Admin Dashboard</NavLink>
+                )}
+              </>
+            )}
           </nav>
 
           {/* Right side */}
@@ -72,11 +98,19 @@ const Navbar = () => {
                 <button
                   type="button"
                   onClick={() => setMenuOpen((o) => !o)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 text-white font-semibold text-sm hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                  className="rounded-full hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
                   aria-label="Open user menu"
                   aria-expanded={menuOpen}
                 >
-                  {renderInitials()}
+                  <Avatar className="h-10 w-10 border border-gray-200 bg-white">
+                    {user.avatar ? (
+                      <img src={user.avatar} alt="User avatar" className="h-full w-full object-cover" />
+                    ) : (
+                      <AvatarFallback className="bg-gradient-to-br from-teal-500 to-emerald-600 text-white">
+                        {renderInitials()}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
                 </button>
                 {menuOpen && (
                   <div className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white shadow-lg py-1 z-50">
@@ -148,42 +182,81 @@ const Navbar = () => {
             >
               <X className="h-5 w-5" />
             </button>
-            <div className="flex items-center gap-2 mt-8">
+            <Link to={user ? "/dashboard" : "/"} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 mt-8 hover:opacity-80 transition-opacity">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600">
                 <Heart className="h-5 w-5 text-white" fill="white" />
               </div>
               <span className="text-xl font-bold text-gray-900">ElderConnect</span>
-            </div>
+            </Link>
             <nav className="flex flex-col gap-2 mt-4">
-              <Link
-                to="/"
-                onClick={() => setMobileOpen(false)}
-                className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
-              >
-                Home
-              </Link>
-              <a
-                href="#find"
-                onClick={() => setMobileOpen(false)}
-                className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
-              >
-                Find Caretaker
-              </a>
-              <a
-                href="#how-it-works"
-                onClick={() => setMobileOpen(false)}
-                className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
-              >
-                How It Works
-              </a>
               {user && (
-                <Link
-                  to="/dashboard"
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
-                >
-                  My Dashboard
-                </Link>
+                <div className="mb-2 flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-3">
+                  <Avatar className="h-10 w-10 border border-gray-200 bg-white">
+                    {user.avatar ? (
+                      <img src={user.avatar} alt="User avatar" className="h-full w-full object-cover" />
+                    ) : (
+                      <AvatarFallback className="bg-gradient-to-br from-teal-500 to-emerald-600 text-white">
+                        {renderInitials()}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-gray-900">
+                      {user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.name || "User"}
+                    </p>
+                    <p className="truncate text-xs text-gray-500">{user.email}</p>
+                  </div>
+                </div>
+              )}
+              {!user ? (
+                <>
+                  <Link
+                    to="/"
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    Home
+                  </Link>
+                  <a
+                    href="/#find"
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    Find Caretaker
+                  </a>
+                  <a
+                    href="/#how-it-works"
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    How It Works
+                  </a>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    Dashboard
+                  </Link>
+                  {user.role === "Customer" && (
+                    <>
+                      <Link to="/search" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Find Caretaker</Link>
+                      <Link to="/my-bookings" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">My Bookings</Link>
+                    </>
+                  )}
+                  {user.role === "Caretaker" && (
+                    <>
+                      <Link to="/my-bookings" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">My Bookings</Link>
+                      <Link to="/caretaker/profile/edit" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">My Profile</Link>
+                    </>
+                  )}
+                  {user.role === "Admin" && (
+                    <Link to="/admin/dashboard" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Admin Dashboard</Link>
+                  )}
+                </>
               )}
             </nav>
             <div className="mt-auto flex flex-col gap-2">

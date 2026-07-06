@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import StarRating from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
+import MapPicker from "@/components/MapPicker";
 
 const SERVICE_OPTIONS = [
   "Health Check-up",
@@ -193,7 +194,7 @@ const CaretakerSummary = ({ profile }) => {
       <div className="text-left sm:text-right">
         <p className="text-xs text-gray-500">Hourly rate</p>
         <p className="text-xl font-bold text-teal-700">
-          ${hourlyRate}
+          ₹{hourlyRate}
           <span className="text-sm font-medium text-gray-500">/hr</span>
         </p>
       </div>
@@ -302,12 +303,16 @@ const BookingFormPage = () => {
     city: "",
     state: "",
     zipCode: "",
+    lat: "",
+    lng: "",
     notes: "",
   });
 
   const [elders, setElders] = useState([]);
   const [loadingElders, setLoadingElders] = useState(true);
   const [eldersError, setEldersError] = useState(null);
+  
+  const [useElderAddress, setUseElderAddress] = useState(true);
 
   // Load elders list
   useEffect(() => {
@@ -414,8 +419,10 @@ const BookingFormPage = () => {
     if (computeDurationHours(formData.startTime, formData.endTime) <= 0) {
       return "End time must be after start time.";
     }
-    if (!formData.street.trim() || !formData.city.trim()) {
-      return "Please provide a street and city for the visit.";
+    if (!useElderAddress) {
+      if (!formData.street.trim() || !formData.city.trim()) {
+        return "Please provide a street and city for the visit.";
+      }
     }
     return null;
   };
@@ -455,11 +462,18 @@ const BookingFormPage = () => {
         scheduledDate: formData.scheduledDate,
         startTime: formData.startTime,
         endTime: formData.endTime,
-        address: {
+        address: useElderAddress && selectedElder ? {
+          street: selectedElder.address?.street || "",
+          city: selectedElder.address?.city || "",
+          state: selectedElder.address?.state || "",
+          zipCode: selectedElder.address?.zipCode || "",
+          coordinates: selectedElder.address?.coordinates || {}
+        } : {
           street: formData.street.trim(),
           city: formData.city.trim(),
           state: formData.state.trim(),
           zipCode: formData.zipCode.trim(),
+          coordinates: { lat: formData.lat, lng: formData.lng }
         },
         notes: formData.notes.trim(),
       };
@@ -699,52 +713,108 @@ const BookingFormPage = () => {
                   </div>
 
                   <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-                    <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                      <MapPin className="h-4 w-4 text-teal-600" />
-                      Service address
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="street">Street</Label>
-                      <Input
-                        id="street"
-                        type="text"
-                        placeholder="123 Main St"
-                        value={formData.street}
-                        onChange={(e) => handleChange("street", e.target.value)}
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                      <div className="space-y-2 sm:col-span-1">
-                        <Label htmlFor="city">City</Label>
-                        <Input
-                          id="city"
-                          type="text"
-                          placeholder="San Francisco"
-                          value={formData.city}
-                          onChange={(e) => handleChange("city", e.target.value)}
-                        />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+                        <MapPin className="h-4 w-4 text-teal-600" />
+                        Service location
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="state">State</Label>
-                        <Input
-                          id="state"
-                          type="text"
-                          placeholder="CA"
-                          value={formData.state}
-                          onChange={(e) => handleChange("state", e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="zipCode">ZIP</Label>
-                        <Input
-                          id="zipCode"
-                          type="text"
-                          placeholder="94110"
-                          value={formData.zipCode}
-                          onChange={(e) => handleChange("zipCode", e.target.value)}
-                        />
+                      <div className="flex items-center gap-4 text-sm">
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="radio"
+                            checked={useElderAddress}
+                            onChange={() => setUseElderAddress(true)}
+                            className="text-teal-600 focus:ring-teal-500 h-4 w-4"
+                          />
+                          Use Elder's Address
+                        </label>
+                        <label className="flex items-center gap-1.5 cursor-pointer">
+                          <input
+                            type="radio"
+                            checked={!useElderAddress}
+                            onChange={() => setUseElderAddress(false)}
+                            className="text-teal-600 focus:ring-teal-500 h-4 w-4"
+                          />
+                          New Location
+                        </label>
                       </div>
                     </div>
+
+                    {useElderAddress ? (
+                      selectedElder ? (
+                        <div className="space-y-3 pt-2">
+                          <div className="text-sm text-gray-700 bg-white p-3 rounded-md border border-gray-200">
+                            {[selectedElder.address?.street, selectedElder.address?.city, selectedElder.address?.state, selectedElder.address?.zipCode]
+                              .filter(Boolean)
+                              .join(", ") || "No address provided for this elder."}
+                          </div>
+                          {selectedElder.address?.coordinates?.lat && selectedElder.address?.coordinates?.lng ? (
+                            <MapPicker
+                              lat={selectedElder.address.coordinates.lat}
+                              lng={selectedElder.address.coordinates.lng}
+                              readOnly={true}
+                            />
+                          ) : (
+                            <div className="text-xs text-gray-500 italic">No map coordinates available for this elder.</div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic pt-2">Please select an elder first to use their address.</p>
+                      )
+                    ) : (
+                      <div className="space-y-4 pt-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="street">Street</Label>
+                          <Input
+                            id="street"
+                            type="text"
+                            placeholder="123 Main St"
+                            value={formData.street}
+                            onChange={(e) => handleChange("street", e.target.value)}
+                          />
+                        </div>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                          <div className="space-y-2 sm:col-span-1">
+                            <Label htmlFor="city">City</Label>
+                            <Input
+                              id="city"
+                              type="text"
+                              placeholder="San Francisco"
+                              value={formData.city}
+                              onChange={(e) => handleChange("city", e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="state">State</Label>
+                            <Input
+                              id="state"
+                              type="text"
+                              placeholder="CA"
+                              value={formData.state}
+                              onChange={(e) => handleChange("state", e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="zipCode">ZIP</Label>
+                            <Input
+                              id="zipCode"
+                              type="text"
+                              placeholder="94110"
+                              value={formData.zipCode}
+                              onChange={(e) => handleChange("zipCode", e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2 pt-2">
+                          <Label className="text-sm">Pinpoint on Map</Label>
+                          <MapPicker
+                            lat={formData.lat}
+                            lng={formData.lng}
+                            onChange={(lat, lng) => setFormData(prev => ({...prev, lat, lng}))}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -770,10 +840,10 @@ const BookingFormPage = () => {
                     <div className="rounded-lg border border-teal-200 bg-teal-50 px-4 py-3 text-sm">
                       <div className="flex items-center justify-between">
                         <span className="text-gray-700">
-                          {durationHours.toFixed(2)} hrs × ${hourlyRate}/hr
+                          {durationHours.toFixed(2)} hrs × ₹{hourlyRate}/hr
                         </span>
                         <span className="text-base font-bold text-teal-700">
-                          ${totalAmount.toFixed(2)}
+                          ₹{totalAmount.toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -872,9 +942,15 @@ const BookingFormPage = () => {
                         <MapPin className="h-3.5 w-3.5" /> Address
                       </dt>
                       <dd className="mt-1 text-sm font-medium text-gray-900">
-                        {[formData.street, formData.city, formData.state, formData.zipCode]
-                          .filter(Boolean)
-                          .join(", ") || "—"}
+                        {useElderAddress && selectedElder ? (
+                          [selectedElder.address?.street, selectedElder.address?.city, selectedElder.address?.state, selectedElder.address?.zipCode]
+                            .filter(Boolean)
+                            .join(", ") || "—"
+                        ) : (
+                          [formData.street, formData.city, formData.state, formData.zipCode]
+                            .filter(Boolean)
+                            .join(", ") || "—"
+                        )}
                       </dd>
                     </div>
                     {formData.notes && (
@@ -892,10 +968,10 @@ const BookingFormPage = () => {
                   <div className="rounded-lg border border-teal-200 bg-teal-50 px-4 py-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-700">
-                        Estimated total ({durationHours.toFixed(2)} hrs × ${hourlyRate})
+                        Estimated total ({durationHours.toFixed(2)} hrs × ₹{hourlyRate})
                       </span>
                       <span className="text-lg font-bold text-teal-700">
-                        ${totalAmount.toFixed(2)}
+                        ₹{totalAmount.toFixed(2)}
                       </span>
                     </div>
                     <p className="mt-1 flex items-center gap-1.5 text-xs text-gray-500">

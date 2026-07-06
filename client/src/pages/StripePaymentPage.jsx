@@ -191,7 +191,7 @@ const PaymentForm = ({ booking, onSuccess }) => {
         ) : (
           <Lock className="h-4 w-4" />
         )}
-        {submitting ? "Processing..." : `Pay $${Number(booking.totalAmount || 0).toFixed(2)}`}
+        {submitting ? "Processing..." : `Pay ₹${Number(booking.totalAmount || 0).toFixed(2)}`}
       </Button>
     </form>
   );
@@ -275,7 +275,7 @@ const BookingSummary = ({ booking }) => {
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-teal-900">Total amount</span>
             <span className="text-2xl font-bold text-teal-700">
-              ${Number(booking.totalAmount || 0).toFixed(2)}
+              ₹{Number(booking.totalAmount || 0).toFixed(2)}
             </span>
           </div>
           <p className="mt-1 text-xs text-teal-800 inline-flex items-center gap-1">
@@ -289,6 +289,7 @@ const BookingSummary = ({ booking }) => {
 };
 
 const SuccessPanel = ({ booking, onRetry }) => {
+  const navigate = useNavigate();
   return (
     <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50">
       <CardContent className="p-8 text-center">
@@ -308,17 +309,13 @@ const SuccessPanel = ({ booking, onRetry }) => {
           Payment ID: DEMO-{booking._id?.slice(-8)?.toUpperCase() || "00000000"}
         </div>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <Button asChild={false} onClick={onRetry}>
-            <Link to="/dashboard">
-              <Sparkles className="h-4 w-4" />
-              Go to dashboard
-            </Link>
+          <Button onClick={() => navigate("/dashboard")}>
+            <Sparkles className="h-4 w-4" />
+            Go to dashboard
           </Button>
-          <Button variant="outline" asChild={false}>
-            <Link to="/my-bookings">
-              <ArrowRight className="h-4 w-4" />
-              My bookings
-            </Link>
+          <Button variant="outline" onClick={() => navigate("/my-bookings")}>
+            <ArrowRight className="h-4 w-4" />
+            My bookings
           </Button>
         </div>
       </CardContent>
@@ -327,6 +324,7 @@ const SuccessPanel = ({ booking, onRetry }) => {
 };
 
 const FailedPanel = ({ onRetry }) => {
+  const navigate = useNavigate();
   return (
     <Card className="border-red-200 bg-red-50">
       <CardContent className="p-6 text-center">
@@ -342,8 +340,8 @@ const FailedPanel = ({ onRetry }) => {
             <RefreshCw className="h-4 w-4" />
             Try again
           </Button>
-          <Button variant="outline" asChild={false}>
-            <Link to="/my-bookings">Back to bookings</Link>
+          <Button variant="outline" onClick={() => navigate("/my-bookings")}>
+            Back to bookings
           </Button>
         </div>
       </CardContent>

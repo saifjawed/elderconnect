@@ -14,11 +14,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import AvatarUploader from "@/components/AvatarUploader";
 import Navbar from "@/components/Navbar";
 
 const CustomerProfileEditPage = () => {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, loading: authLoading } = useAuth();
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -37,6 +38,7 @@ const CustomerProfileEditPage = () => {
 
   // Redirect if not Customer (or Admin)
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       navigate("/login");
       return;
@@ -44,7 +46,7 @@ const CustomerProfileEditPage = () => {
     if (user.role !== "Customer" && user.role !== "Admin") {
       navigate("/dashboard");
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   // Load current user data
   useEffect(() => {
@@ -175,6 +177,13 @@ const CustomerProfileEditPage = () => {
                   {successMsg}
                 </div>
               )}
+
+              <AvatarUploader
+                user={user}
+                onUserUpdated={updateUser}
+                onError={setError}
+                onSuccess={setSuccessMsg}
+              />
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">

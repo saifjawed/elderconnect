@@ -33,7 +33,7 @@ const buttonVariants = cva(
 );
 
 const Button = React.forwardRef(
-  ({ className, variant, size, type = "button", ...props }, ref) => {
+  ({ className, variant, size, type = "button", asChild, ...props }, ref) => {
     return (
       <button
         ref={ref}

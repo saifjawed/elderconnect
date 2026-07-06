@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import Booking from '../models/Booking.js';
 import User from '../models/User.js';
+import Elder from '../models/Elder.js';
 import CaretakerProfile from '../models/CaretakerProfile.js';
 import { emitNewBooking, emitBookingUpdate } from '../socket/notifications.js';
 
@@ -91,8 +92,8 @@ export const createBooking = async (req, res) => {
     // Optional: validate elder reference
     let validatedElder = undefined;
     if (elder && mongoose.Types.ObjectId.isValid(elder)) {
-      const elderUser = await User.findById(elder);
-      if (elderUser) {
+      const elderProfile = await Elder.findById(elder);
+      if (elderProfile) {
         validatedElder = elder;
       }
     }
@@ -138,9 +139,6 @@ export const getMyBookings = async (req, res) => {
       query.caretaker = req.user.id;
     } else if (req.user.role === 'Admin') {
       // admin sees everything
-    } else {
-      // Elder role: bookings where they are the elder recipient
-      query.elder = req.user.id;
     }
 
     if (status) {
@@ -190,10 +188,9 @@ export const getBookingById = async (req, res) => {
 
     const isCustomer = booking.customer && booking.customer._id.toString() === req.user.id.toString();
     const isCaretaker = booking.caretaker && booking.caretaker._id.toString() === req.user.id.toString();
-    const isElder = booking.elder && booking.elder._id.toString() === req.user.id.toString();
     const isAdmin = req.user.role === 'Admin';
 
-    if (!isCustomer && !isCaretaker && !isElder && !isAdmin) {
+    if (!isCustomer && !isCaretaker && !isAdmin) {
       return res.status(403).json({ message: 'Not authorized to view this booking' });
     }
 

@@ -73,13 +73,13 @@ export const createReview = async (req, res) => {
             totalReviews,
           },
         },
-        { new: true }
+        { returnDocument: 'after' }
       );
     } else {
       await CaretakerProfile.findOneAndUpdate(
         { user: booking.caretaker },
         { $set: { rating: 0, totalReviews: 0 } },
-        { new: true }
+        { returnDocument: 'after' }
       );
     }
 

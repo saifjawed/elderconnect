@@ -197,10 +197,10 @@ const BookingCard = ({ booking, onCancel, onReview, onMessage, cancellingId }) =
           <div className="text-left sm:text-right">
             <p className="text-xs text-gray-500">Total</p>
             <p className="text-lg font-bold text-teal-700">
-              ${Number(booking.totalAmount || 0).toFixed(2)}
+              ₹{Number(booking.totalAmount || 0).toFixed(2)}
             </p>
             {hourlyRate > 0 && (
-              <p className="text-xs text-gray-500">${hourlyRate}/hr</p>
+              <p className="text-xs text-gray-500">₹{hourlyRate}/hr</p>
             )}
           </div>
         </div>
@@ -326,51 +326,127 @@ const BookingSkeleton = () => (
   </Card>
 );
 
-const EmptyState = ({ hasFilters, onClear }) => (
-  <div className="rounded-2xl border border-dashed border-gray-300 bg-gradient-to-br from-teal-50/50 to-emerald-50/30 px-6 py-16 text-center">
-    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 shadow-md">
-      <CalendarCheck className="h-8 w-8 text-white" />
+const EmptyState = ({ hasFilters, onClear }) => {
+  const navigate = useNavigate();
+  return (
+    <div className="rounded-2xl border border-dashed border-gray-300 bg-gradient-to-br from-teal-50/50 to-emerald-50/30 px-6 py-16 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 shadow-md">
+        <CalendarCheck className="h-8 w-8 text-white" />
+      </div>
+      <h3 className="mt-4 text-xl font-semibold text-gray-900">
+        {hasFilters ? "No bookings match your filters" : "No bookings yet"}
+      </h3>
+      <p className="mt-2 max-w-md mx-auto text-sm text-gray-600">
+        {hasFilters
+          ? "Try adjusting your status filter or search query to see more bookings."
+          : "When you book a caretaker, your requests and upcoming visits will show up here."}
+      </p>
+      <div className="mt-6 flex justify-center gap-2">
+        {hasFilters ? (
+          <Button variant="outline" onClick={onClear}>
+            <X className="h-4 w-4" />
+            Clear filters
+          </Button>
+        ) : (
+          <Button onClick={() => navigate("/search")}>Find a caretaker</Button>
+        )}
+      </div>
     </div>
-    <h3 className="mt-4 text-xl font-semibold text-gray-900">
-      {hasFilters ? "No bookings match your filters" : "No bookings yet"}
-    </h3>
-    <p className="mt-2 max-w-md mx-auto text-sm text-gray-600">
-      {hasFilters
-        ? "Try adjusting your status filter or search query to see more bookings."
-        : "When you book a caretaker, your requests and upcoming visits will show up here."}
-    </p>
-    <div className="mt-6 flex justify-center gap-2">
-      {hasFilters ? (
-        <Button variant="outline" onClick={onClear}>
-          <X className="h-4 w-4" />
-          Clear filters
-        </Button>
-      ) : (
-        <Button onClick={() => window.location.assign("/search")}>Find a caretaker</Button>
-      )}
-    </div>
-  </div>
-);
+  );
+};
 
-const SignInPrompt = () => (
-  <div className="mx-auto max-w-md px-4 py-24 text-center">
-    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-600">
-      <CalendarCheck className="h-8 w-8 text-white" />
+const SignInPrompt = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="mx-auto max-w-md px-4 py-24 text-center">
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-600">
+        <CalendarCheck className="h-8 w-8 text-white" />
+      </div>
+      <h2 className="mt-4 text-2xl font-bold text-gray-900">Sign in to view your bookings</h2>
+      <p className="mt-2 text-gray-600">
+        Sign in or create an account to manage your bookings and message caretakers.
+      </p>
+      <div className="mt-6 flex justify-center gap-3">
+        <Button variant="outline" onClick={() => navigate("/login")}>
+          Sign in
+        </Button>
+        <Button onClick={() => navigate("/register")}>
+          Sign up
+        </Button>
+      </div>
     </div>
-    <h2 className="mt-4 text-2xl font-bold text-gray-900">Sign in to view your bookings</h2>
-    <p className="mt-2 text-gray-600">
-      Sign in or create an account to manage your bookings and message caretakers.
-    </p>
-    <div className="mt-6 flex justify-center gap-3">
-      <Button variant="outline" asChild={false} onClick={() => (window.location.href = "/login")}>
-        <Link to="/login">Sign in</Link>
-      </Button>
-      <Button asChild={false} onClick={() => (window.location.href = "/register")}>
-        <Link to="/register">Sign up</Link>
-      </Button>
+  );
+};
+
+const ReviewModal = ({ booking, onClose, onSubmit, submitting, error }) => {
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+
+  const caretakerName = booking.caretaker
+    ? `${booking.caretaker.firstName} ${booking.caretaker.lastName}`.trim()
+    : "Caretaker";
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit({ rating, comment });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+        >
+          <X className="h-5 w-5" />
+        </button>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">Leave a Review</h2>
+        <p className="text-sm text-gray-600 mb-6">
+          How was your experience with {caretakerName}?
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {error && (
+            <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+            <StarRating
+              rating={rating}
+              onRate={setRating}
+              size="lg"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Comment (Optional)</label>
+            <textarea
+              className="w-full rounded-md border border-gray-300 p-3 text-sm focus:border-teal-500 focus:ring-teal-500 min-h-[100px]"
+              placeholder="Share details of your own experience"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={submitting || rating === 0}>
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Submit Review
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const MyBookingsPage = () => {
   const navigate = useNavigate();
@@ -387,6 +463,10 @@ const MyBookingsPage = () => {
   const [cancellingId, setCancellingId] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [actionSuccess, setActionSuccess] = useState(null);
+
+  const [reviewingBooking, setReviewingBooking] = useState(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -492,7 +572,29 @@ const MyBookingsPage = () => {
 
   const handleReview = (booking) => {
     if (!booking?._id) return;
-    navigate(`/bookings/${booking._id}/review`);
+    setReviewingBooking(booking);
+    setReviewError(null);
+  };
+
+  const submitReview = async ({ rating, comment }) => {
+    if (!reviewingBooking) return;
+    setSubmittingReview(true);
+    setReviewError(null);
+    try {
+      await api.post("/reviews", {
+        bookingId: reviewingBooking._id,
+        rating,
+        comment,
+      });
+      setActionSuccess("Review submitted successfully!");
+      setReviewingBooking(null);
+    } catch (err) {
+      setReviewError(
+        err.response?.data?.message || "Failed to submit review. Please try again."
+      );
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   const handleMessage = (booking) => {
@@ -717,6 +819,16 @@ const MyBookingsPage = () => {
           </div>
         )}
       </div>
+
+      {reviewingBooking && (
+        <ReviewModal
+          booking={reviewingBooking}
+          onClose={() => setReviewingBooking(null)}
+          onSubmit={submitReview}
+          submitting={submittingReview}
+          error={reviewError}
+        />
+      )}
     </div>
   );
 };

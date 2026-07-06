@@ -20,7 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import AvatarUploader from "@/components/AvatarUploader";
 import Navbar from "@/components/Navbar";
+import MapPicker from "@/components/MapPicker";
 
 const AVAILABLE_SERVICES = [
   "Health Check-up",
@@ -43,7 +45,7 @@ const DAYS_OF_WEEK = [
 
 const CaretakerProfileEditPage = () => {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, loading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,6 +57,12 @@ const CaretakerProfileEditPage = () => {
     firstName: "",
     lastName: "",
     phone: "",
+    street: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    lat: null,
+    lng: null
   });
 
   const [profileInfo, setProfileInfo] = useState({
@@ -79,6 +87,7 @@ const CaretakerProfileEditPage = () => {
 
   // Redirect if not Caretaker (or Admin)
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       navigate("/login");
       return;
@@ -86,7 +95,7 @@ const CaretakerProfileEditPage = () => {
     if (user.role !== "Caretaker" && user.role !== "Admin") {
       navigate("/dashboard");
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   // Load current user and profile data
   useEffect(() => {
@@ -105,6 +114,12 @@ const CaretakerProfileEditPage = () => {
           firstName: u.firstName || "",
           lastName: u.lastName || "",
           phone: u.phone || "",
+          street: u.address?.street || "",
+          city: u.address?.city || "",
+          state: u.address?.state || "",
+          zipCode: u.address?.zipCode || "",
+          lat: u.address?.coordinates?.lat || null,
+          lng: u.address?.coordinates?.lng || null
         });
 
         if (p) {
@@ -185,6 +200,14 @@ const CaretakerProfileEditPage = () => {
       setError("First Name and Last Name are required.");
       return;
     }
+    if (!basicInfo.street.trim() || !basicInfo.city.trim() || !basicInfo.state.trim() || !basicInfo.zipCode.trim()) {
+      setError("Street, City, State, and ZIP Code are required.");
+      return;
+    }
+    if (basicInfo.lat === null || basicInfo.lng === null) {
+      setError("Please choose your caretaker location on the map.");
+      return;
+    }
     if (Number(profileInfo.hourlyRate) <= 0) {
       setError("Please specify a valid hourly rate greater than 0.");
       return;
@@ -200,6 +223,16 @@ const CaretakerProfileEditPage = () => {
         firstName: basicInfo.firstName.trim(),
         lastName: basicInfo.lastName.trim(),
         phone: basicInfo.phone.trim(),
+        address: {
+          street: basicInfo.street.trim(),
+          city: basicInfo.city.trim(),
+          state: basicInfo.state.trim(),
+          zipCode: basicInfo.zipCode.trim(),
+          coordinates: {
+            lat: basicInfo.lat ? Number(basicInfo.lat) : null,
+            lng: basicInfo.lng ? Number(basicInfo.lng) : null
+          }
+        }
       };
       const userRes = await api.put("/users/me", userPayload);
       updateUser(userRes.data);
@@ -244,7 +277,7 @@ const CaretakerProfileEditPage = () => {
     }
   };
 
-  if (loading) {
+  if (authLoading || (loading && user)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-white">
         <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
@@ -295,6 +328,13 @@ const CaretakerProfileEditPage = () => {
             </div>
           )}
 
+          <AvatarUploader
+            user={user}
+            onUserUpdated={updateUser}
+            onError={setError}
+            onSuccess={setSuccessMsg}
+          />
+
           {/* 1. Basic Info */}
           <Card className="border-gray-200">
             <CardHeader>
@@ -337,6 +377,76 @@ const CaretakerProfileEditPage = () => {
                     onChange={(e) => handleBasicChange("phone", e.target.value)}
                     className="pl-10"
                   />
+                </div>
+              </div>
+
+              <div className="space-y-4 rounded-lg border border-gray-150 bg-gray-50 p-4 sm:col-span-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                  <MapPin className="h-4 w-4 text-teal-600" />
+                  Primary Caretaker Address & Map Location
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="street">Street Address</Label>
+                  <Input
+                    id="street"
+                    type="text"
+                    placeholder="123 Care Lane"
+                    value={basicInfo.street}
+                    onChange={(e) => handleBasicChange("street", e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      type="text"
+                      placeholder="San Francisco"
+                      value={basicInfo.city}
+                      onChange={(e) => handleBasicChange("city", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="state">State</Label>
+                    <Input
+                      id="state"
+                      type="text"
+                      placeholder="CA"
+                      value={basicInfo.state}
+                      onChange={(e) => handleBasicChange("state", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="zipCode">ZIP</Label>
+                    <Input
+                      id="zipCode"
+                      type="text"
+                      placeholder="94110"
+                      value={basicInfo.zipCode}
+                      onChange={(e) => handleBasicChange("zipCode", e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Choose Location on Map</Label>
+                  <MapPicker
+                    lat={basicInfo.lat}
+                    lng={basicInfo.lng}
+                    onChange={(lat, lng) => {
+                      handleBasicChange("lat", lat);
+                      handleBasicChange("lng", lng);
+                    }}
+                  />
+                  <p className="text-[10px] text-gray-500">
+                    Click on the map or click the locate button to update your coordinates.
+                  </p>
                 </div>
               </div>
             </CardContent>

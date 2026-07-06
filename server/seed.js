@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import dotenv from 'dotenv';
 import User from './models/User.js';
+import Elder from './models/Elder.js';
 import CaretakerProfile from './models/CaretakerProfile.js';
 import Booking from './models/Booking.js';
 import Review from './models/Review.js';
@@ -28,6 +29,7 @@ async function seed() {
 
     // Clear existing data
     await User.deleteMany({});
+    await Elder.deleteMany({});
     await CaretakerProfile.deleteMany({});
     await Booking.deleteMany({});
     await Review.deleteMany({});
@@ -36,79 +38,76 @@ async function seed() {
 
     // Create admin
     const admin = await User.create({
-      firstName: 'Admin',
-      lastName: 'User',
-      email: 'admin@elderconnect.com',
+      firstName: 'Vikram',
+      lastName: 'Singh',
+      email: 'admin@elderconnect.in',
       password: 'admin123',
       role: 'Admin',
-      phone: '+1-555-0100',
+      phone: '+91-9876543210',
       isActive: true
     });
 
     // Create customers
     const customers = await User.create([
       {
-        firstName: 'Sarah',
-        lastName: 'Johnson',
-        email: 'sarah@example.com',
+        firstName: 'Rahul',
+        lastName: 'Sharma',
+        email: 'rahul@example.in',
         password: 'password123',
         role: 'Customer',
-        phone: '+1-555-0101',
-        address: { city: 'New York', state: 'NY', coordinates: { lat: 40.7128, lng: -74.006 } },
+        phone: '+91-9876500001',
+        address: { street: 'Nucleus Mall, Circular Road', city: 'Ranchi', state: 'JH', zipCode: '834001', coordinates: { lat: 23.3732, lng: 85.3283 } },
         isActive: true
       },
       {
-        firstName: 'Michael',
-        lastName: 'Chen',
-        email: 'michael@example.com',
+        firstName: 'Priya',
+        lastName: 'Patel',
+        email: 'priya@example.in',
         password: 'password123',
         role: 'Customer',
-        phone: '+1-555-0102',
-        address: { city: 'Los Angeles', state: 'CA', coordinates: { lat: 34.0522, lng: -118.2437 } },
+        phone: '+91-9876500002',
+        address: { street: 'Gateway of India, Apollo Bandar', city: 'Mumbai', state: 'MH', zipCode: '400001', coordinates: { lat: 18.9220, lng: 72.8347 } },
         isActive: true
       },
       {
-        firstName: 'Emily',
-        lastName: 'Rodriguez',
-        email: 'emily@example.com',
+        firstName: 'Amit',
+        lastName: 'Kumar',
+        email: 'amit@example.in',
         password: 'password123',
         role: 'Customer',
-        phone: '+1-555-0103',
-        address: { city: 'Chicago', state: 'IL', coordinates: { lat: 41.8781, lng: -87.6298 } },
+        phone: '+91-9876500003',
+        address: { street: 'IIT ISM, Sardar Patel Nagar', city: 'Dhanbad', state: 'JH', zipCode: '826004', coordinates: { lat: 23.8143, lng: 86.4412 } },
         isActive: true
       }
     ]);
 
-    // Create elders
-    const elders = await User.create([
+    // Create elders (linked to customers)
+    const elders = await Elder.create([
       {
-        firstName: 'Margaret',
-        lastName: 'Johnson',
-        email: 'margaret@example.com',
-        password: 'password123',
-        role: 'Elder',
-        phone: '+1-555-0201',
-        address: { city: 'New York', state: 'NY', coordinates: { lat: 40.7128, lng: -74.006 } },
+        parentCustomer: customers[0]._id, // Rahul's father
+        firstName: 'Ram Narayan',
+        lastName: 'Sharma',
+        relation: 'Father',
+        phone: '+91-9876500101',
+        address: { street: 'Nucleus Mall, Circular Road', city: 'Ranchi', state: 'JH', zipCode: '834001', coordinates: { lat: 23.3732, lng: 85.3283 } },
         isActive: true
       },
       {
-        firstName: 'Robert',
-        lastName: 'Chen',
-        email: 'robert@example.com',
-        password: 'password123',
-        role: 'Elder',
-        phone: '+1-555-0202',
-        address: { city: 'Los Angeles', state: 'CA', coordinates: { lat: 34.0522, lng: -118.2437 } },
+        parentCustomer: customers[1]._id, // Priya's mother
+        firstName: 'Shanti',
+        lastName: 'Patel',
+        relation: 'Mother',
+        phone: '+91-9876500102',
+        address: { street: 'Gateway of India, Apollo Bandar', city: 'Mumbai', state: 'MH', zipCode: '400001', coordinates: { lat: 18.9220, lng: 72.8347 } },
         isActive: true
       },
       {
-        firstName: 'Dorothy',
-        lastName: 'Williams',
-        email: 'dorothy@example.com',
-        password: 'password123',
-        role: 'Elder',
-        phone: '+1-555-0203',
-        address: { city: 'Chicago', state: 'IL', coordinates: { lat: 41.8781, lng: -87.6298 } },
+        parentCustomer: customers[2]._id, // Amit's father
+        firstName: 'Suresh',
+        lastName: 'Kumar',
+        relation: 'Father',
+        phone: '+91-9876500103',
+        address: { street: 'IIT ISM, Sardar Patel Nagar', city: 'Dhanbad', state: 'JH', zipCode: '826004', coordinates: { lat: 23.8143, lng: 86.4412 } },
         isActive: true
       }
     ]);
@@ -116,53 +115,73 @@ async function seed() {
     // Create caretakers
     const caretakersData = [
       {
-        firstName: 'Alice',
-        lastName: 'Thompson',
-        email: 'alice@eldercare.com',
+        firstName: 'Sunita',
+        lastName: 'Devi',
+        email: 'sunita@eldercare.in',
         password: 'password123',
         role: 'Caretaker',
-        phone: '+1-555-0301',
-        address: { city: 'New York', state: 'NY', coordinates: { lat: 40.7128, lng: -74.006 } },
+        phone: '+91-9876500201',
+        address: { street: 'Jubilee Park Road', city: 'Jamshedpur', state: 'JH', zipCode: '831001', coordinates: { lat: 22.8046, lng: 86.1925 } },
         isActive: true
       },
       {
-        firstName: 'James',
-        lastName: 'Martinez',
-        email: 'james@eldercare.com',
+        firstName: 'Rajesh',
+        lastName: 'Gupta',
+        email: 'rajesh@eldercare.in',
         password: 'password123',
         role: 'Caretaker',
-        phone: '+1-555-0302',
-        address: { city: 'Los Angeles', state: 'CA', coordinates: { lat: 34.0522, lng: -118.2437 } },
+        phone: '+91-9876500202',
+        address: { street: 'Shaniwar Wada, Shaniwar Peth', city: 'Pune', state: 'MH', zipCode: '411030', coordinates: { lat: 18.5195, lng: 73.8553 } },
         isActive: true
       },
       {
-        firstName: 'Patricia',
-        lastName: 'Davis',
-        email: 'patricia@eldercare.com',
+        firstName: 'Meena',
+        lastName: 'Iyer',
+        email: 'meena@eldercare.in',
         password: 'password123',
         role: 'Caretaker',
-        phone: '+1-555-0303',
-        address: { city: 'Chicago', state: 'IL', coordinates: { lat: 41.8781, lng: -87.6298 } },
+        phone: '+91-9876500203',
+        address: { street: 'UB City, Vittal Mallya Road', city: 'Bengaluru', state: 'KA', zipCode: '560001', coordinates: { lat: 12.9716, lng: 77.5946 } },
         isActive: true
       },
       {
-        firstName: 'William',
-        lastName: 'Anderson',
-        email: 'william@eldercare.com',
+        firstName: 'Anil',
+        lastName: 'Verma',
+        email: 'anil@eldercare.in',
         password: 'password123',
         role: 'Caretaker',
-        phone: '+1-555-0304',
-        address: { city: 'New York', state: 'NY', coordinates: { lat: 40.7128, lng: -74.006 } },
+        phone: '+91-9876500204',
+        address: { street: 'City Centre, Sector 4', city: 'Bokaro Steel City', state: 'JH', zipCode: '827004', coordinates: { lat: 23.6693, lng: 86.1511 } },
         isActive: true
       },
       {
-        firstName: 'Linda',
-        lastName: 'Wilson',
-        email: 'linda@eldercare.com',
+        firstName: 'Kavita',
+        lastName: 'Reddy',
+        email: 'kavita@eldercare.in',
         password: 'password123',
         role: 'Caretaker',
-        phone: '+1-555-0305',
-        address: { city: 'Los Angeles', state: 'CA', coordinates: { lat: 34.0522, lng: -118.2437 } },
+        phone: '+91-9876500205',
+        address: { street: 'Charminar, Charminar Rd', city: 'Hyderabad', state: 'TS', zipCode: '500002', coordinates: { lat: 17.3616, lng: 78.4747 } },
+        isActive: true
+      },
+      {
+        firstName: 'Vikash',
+        lastName: 'Singh',
+        email: 'vikash@eldercare.in',
+        password: 'password123',
+        role: 'Caretaker',
+        phone: '+91-9876500206',
+        address: { street: 'Baidyanath Dham', city: 'Deoghar', state: 'JH', zipCode: '814112', coordinates: { lat: 24.4815, lng: 86.6993 } },
+        isActive: true
+      },
+      {
+        firstName: 'Manoj',
+        lastName: 'Tiwari',
+        email: 'manoj@eldercare.in',
+        password: 'password123',
+        role: 'Caretaker',
+        phone: '+91-9876500207',
+        address: { street: 'India Gate, Rajpath', city: 'New Delhi', state: 'DL', zipCode: '110001', coordinates: { lat: 28.6129, lng: 77.2295 } },
         isActive: true
       }
     ];
@@ -175,7 +194,7 @@ async function seed() {
         user: caretakers[0]._id,
         bio: 'Experienced registered nurse with 10+ years in elder care.',
         services: ['Health Check-up', 'Medication Management', 'Mobility Assistance'],
-        hourlyRate: 35,
+        hourlyRate: 500, // INR
         certifications: ['Registered Nurse (RN)', 'CPR Certified', 'Dementia Care Specialist'],
         experience: 10,
         availability: {
@@ -187,15 +206,15 @@ async function seed() {
           saturday: { available: false },
           sunday: { available: false }
         },
-        cities: ['New York'],
-        languages: ['English', 'Spanish'],
+        cities: ['Ranchi', 'Jamshedpur'],
+        languages: ['Hindi', 'English'],
         isVerified: true
       },
       {
         user: caretakers[1]._id,
         bio: 'Compassionate caregiver specializing in companionship and meal preparation.',
         services: ['Companionship', 'Meal Preparation', 'Errands'],
-        hourlyRate: 25,
+        hourlyRate: 350, // INR
         certifications: ['Certified Nursing Assistant', 'First Aid Certified'],
         experience: 5,
         availability: {
@@ -207,15 +226,15 @@ async function seed() {
           saturday: { available: true, start: '10:00', end: '16:00' },
           sunday: { available: true, start: '10:00', end: '16:00' }
         },
-        cities: ['Los Angeles', 'San Diego'],
-        languages: ['English', 'Spanish'],
+        cities: ['Pune', 'Mumbai'],
+        languages: ['Hindi', 'Marathi', 'English'],
         isVerified: true
       },
       {
         user: caretakers[2]._id,
         bio: 'Physical therapist turned elder care specialist.',
         services: ['Mobility Assistance', 'Health Check-up', 'Companionship'],
-        hourlyRate: 40,
+        hourlyRate: 600, // INR
         certifications: ['Physical Therapist', 'Geriatric Care Specialist'],
         experience: 8,
         availability: {
@@ -227,15 +246,15 @@ async function seed() {
           saturday: { available: false },
           sunday: { available: false }
         },
-        cities: ['Chicago'],
-        languages: ['English', 'Polish'],
+        cities: ['Bengaluru'],
+        languages: ['Kannada', 'English', 'Hindi'],
         isVerified: true
       },
       {
         user: caretakers[3]._id,
         bio: 'Retired teacher with a passion for senior care and companionship.',
         services: ['Companionship', 'Errands', 'Meal Preparation'],
-        hourlyRate: 22,
+        hourlyRate: 300, // INR
         certifications: ['Companion Care Certificate'],
         experience: 3,
         availability: {
@@ -247,28 +266,8 @@ async function seed() {
           saturday: { available: true, start: '10:00', end: '20:00' },
           sunday: { available: true, start: '10:00', end: '20:00' }
         },
-        cities: ['New York', 'Boston'],
-        languages: ['English', 'French'],
-        isVerified: true
-      },
-      {
-        user: caretakers[4]._id,
-        bio: 'Experienced caregiver with a background in pharmacy.',
-        services: ['Medication Management', 'Health Check-up', 'Mobility Assistance'],
-        hourlyRate: 32,
-        certifications: ['Certified Medication Aide', 'CPR Certified'],
-        experience: 6,
-        availability: {
-          monday: { available: true, start: '06:00', end: '14:00' },
-          tuesday: { available: true, start: '06:00', end: '14:00' },
-          wednesday: { available: true, start: '06:00', end: '14:00' },
-          thursday: { available: true, start: '06:00', end: '14:00' },
-          friday: { available: true, start: '06:00', end: '14:00' },
-          saturday: { available: true, start: '06:00', end: '14:00' },
-          sunday: { available: false }
-        },
-        cities: ['Los Angeles'],
-        languages: ['English', 'Korean'],
+        cities: ['Bokaro Steel City', 'Dhanbad'],
+        languages: ['Hindi', 'English'],
         isVerified: true
       }
     ]);
@@ -277,15 +276,15 @@ async function seed() {
     const booking1 = await Booking.create({
       customer: customers[0]._id,
       elder: elders[0]._id,
-      caretaker: caretakers[0]._id,
+      caretaker: caretakers[0]._id, // Sunita (Ranchi/Jamshedpur area)
       serviceType: 'Health Check-up',
       status: 'Completed',
       scheduledDate: new Date('2024-11-15'),
       startTime: '09:00',
       endTime: '11:00',
-      address: { street: '123 Main St', city: 'New York', state: 'NY', zipCode: '10001', coordinates: { lat: 40.7128, lng: -74.006 } },
+      address: { street: 'Nucleus Mall, Circular Road', city: 'Ranchi', state: 'JH', zipCode: '834001', coordinates: { lat: 23.3732, lng: 85.3283 } },
       notes: 'Check blood pressure and medication.',
-      totalAmount: 70,
+      totalAmount: 1000,
       paymentStatus: 'Paid',
       completedAt: new Date('2024-11-15T11:00:00Z')
     });
@@ -294,15 +293,15 @@ async function seed() {
     const booking2 = await Booking.create({
       customer: customers[1]._id,
       elder: elders[1]._id,
-      caretaker: caretakers[1]._id,
+      caretaker: caretakers[1]._id, // Rajesh (Pune/Mumbai area)
       serviceType: 'Companionship',
       status: 'Pending',
       scheduledDate: new Date(Date.now() + 86400000),
       startTime: '14:00',
       endTime: '16:00',
-      address: { street: '456 Sunset Blvd', city: 'Los Angeles', state: 'CA', zipCode: '90028', coordinates: { lat: 34.0522, lng: -118.2437 } },
+      address: { street: 'Gateway of India, Apollo Bandar', city: 'Mumbai', state: 'MH', zipCode: '400001', coordinates: { lat: 18.9220, lng: 72.8347 } },
       notes: 'Weekly companionship visit.',
-      totalAmount: 50,
+      totalAmount: 700,
       paymentStatus: 'Pending'
     });
 
@@ -310,15 +309,15 @@ async function seed() {
     const booking3 = await Booking.create({
       customer: customers[2]._id,
       elder: elders[2]._id,
-      caretaker: caretakers[2]._id,
+      caretaker: caretakers[3]._id, // Anil (Bokaro/Dhanbad area)
       serviceType: 'Mobility Assistance',
       status: 'Accepted',
       scheduledDate: new Date(Date.now() + 172800000),
       startTime: '10:00',
       endTime: '12:00',
-      address: { street: '789 Michigan Ave', city: 'Chicago', state: 'IL', zipCode: '60611', coordinates: { lat: 41.8781, lng: -87.6298 } },
+      address: { street: 'IIT ISM, Sardar Patel Nagar', city: 'Dhanbad', state: 'JH', zipCode: '826004', coordinates: { lat: 23.8143, lng: 86.4412 } },
       notes: 'Help with morning exercises.',
-      totalAmount: 80,
+      totalAmount: 600,
       paymentStatus: 'Pending'
     });
 
@@ -328,7 +327,7 @@ async function seed() {
       customer: customers[0]._id,
       caretaker: caretakers[0]._id,
       rating: 5,
-      comment: 'Alice was wonderful with my mother. Very professional and caring.',
+      comment: 'Sunita was wonderful with my father. Very professional and caring.',
       isVisible: true
     });
 
@@ -338,21 +337,14 @@ async function seed() {
         sender: customers[0]._id,
         receiver: caretakers[0]._id,
         booking: booking1._id,
-        content: 'Hi Alice, thank you for taking care of my mother yesterday!',
+        content: 'Hi Sunita, thank you for taking care of my father yesterday!',
         isRead: true
       },
       {
         sender: caretakers[0]._id,
         receiver: customers[0]._id,
         booking: booking1._id,
-        content: "You're very welcome! Margaret is such a lovely person.",
-        isRead: false
-      },
-      {
-        sender: customers[1]._id,
-        receiver: caretakers[1]._id,
-        booking: booking2._id,
-        content: 'Hi James, just confirming our appointment for tomorrow.',
+        content: "You're very welcome! Ram Narayan Ji is such a lovely person.",
         isRead: false
       }
     ]);
@@ -370,7 +362,7 @@ async function seed() {
     console.log(`Caretakers: ${caretakers.length}`);
     console.log(`Bookings: 3`);
     console.log(`Reviews: 1`);
-    console.log(`Messages: 3`);
+    console.log(`Messages: 2`);
 
     await mongoose.disconnect();
     if (mongod) await mongod.stop();

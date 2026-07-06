@@ -272,7 +272,7 @@ const FilterContent = ({
       </div>
 
       <div className="space-y-2">
-        <Label>Hourly Rate ($)</Label>
+        <Label>Hourly Rate (₹)</Label>
         <div className="grid grid-cols-2 gap-2">
           <Input
             type="number"
@@ -375,7 +375,7 @@ const EmptyState = ({ onClear }) => (
   </div>
 );
 
-const MapPanel = ({ caretakers }) => {
+const MapPanel = ({ caretakers, elders = [] }) => {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -393,10 +393,23 @@ const MapPanel = ({ caretakers }) => {
     [caretakers]
   );
 
+  const locatedElders = useMemo(
+    () =>
+      elders.filter((e) => {
+        const coords = e?.address?.coordinates;
+        return (
+          coords &&
+          typeof coords.lat === "number" &&
+          typeof coords.lng === "number"
+        );
+      }),
+    [elders]
+  );
+
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    // Center on first caretaker or center of USA
+    // Center on first caretaker/elder or center of USA
     const defaultCenter = [39.8283, -98.5795];
     const defaultZoom = 3.5;
 
@@ -405,13 +418,12 @@ const MapPanel = ({ caretakers }) => {
       maxZoom: 18,
     }).setView(defaultCenter, defaultZoom);
 
-    // CartoDB Positron - light map style
+    // Standard OpenStreetMap tiles
     L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: "abcd",
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 20,
       }
     ).addTo(map);
@@ -434,15 +446,15 @@ const MapPanel = ({ caretakers }) => {
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
-    if (locatedCaretakers.length === 0) return;
+    if (locatedCaretakers.length === 0 && locatedElders.length === 0) return;
 
     const bounds = [];
 
+    // Render Caretakers
     locatedCaretakers.forEach((c) => {
       const coords = c.user.address.coordinates;
-      const name = `${c?.user?.firstName || ""} ${
-        c?.user?.lastName || ""
-      }`.trim();
+      const name = `${c?.user?.firstName || ""} ${c?.user?.lastName || ""
+        }`.trim();
 
       const customIcon = L.divIcon({
         html: `<div class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-lg ring-2 ring-white" title="${name}">
@@ -458,8 +470,38 @@ const MapPanel = ({ caretakers }) => {
       marker.bindPopup(`
         <div style="font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; line-height: 1.4; color: #1f2937; padding: 2px;">
           <div style="font-weight: 600; font-size: 14px; margin-bottom: 2px;">${name}</div>
+          <div style="color: #4b5563; margin-bottom: 4px;">Caretaker</div>
           <div style="color: #4b5563; margin-bottom: 4px;">${c.user.address.city || ""}</div>
-          <div style="font-weight: 550; color: #0f766e;">${c.hourlyRate ? `$${c.hourlyRate}/hr` : ""}</div>
+          <div style="font-weight: 550; color: #0f766e;">${c.hourlyRate ? `₹${c.hourlyRate}/hr` : ""}</div>
+        </div>
+      `);
+
+      marker.addTo(map);
+      markersRef.current.push(marker);
+      bounds.push([coords.lat, coords.lng]);
+    });
+
+    // Render Elders
+    locatedElders.forEach((e) => {
+      const coords = e.address.coordinates;
+      const name = `${e?.firstName || ""} ${e?.lastName || ""}`.trim();
+
+      const customIcon = L.divIcon({
+        html: `<div class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-lg ring-2 ring-white animate-bounce" title="Elder: ${name}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+        </div>`,
+        className: "custom-leaflet-marker-elder",
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+      });
+
+      const marker = L.marker([coords.lat, coords.lng], { icon: customIcon });
+
+      marker.bindPopup(`
+        <div style="font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; line-height: 1.4; color: #1f2937; padding: 2px;">
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 2px; color: #be123c;">Elder: ${name}</div>
+          <div style="color: #4b5563; margin-bottom: 4px;">Relation: ${e.relation || "Elder"}</div>
+          <div style="color: #4b5563;">${e.address?.street || ""}, ${e.address?.city || ""}</div>
         </div>
       `);
 
@@ -471,7 +513,7 @@ const MapPanel = ({ caretakers }) => {
     if (bounds.length > 0) {
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
     }
-  }, [locatedCaretakers]);
+  }, [locatedCaretakers, locatedElders]);
 
   return (
     <div
@@ -487,12 +529,35 @@ const SearchPage = () => {
   const { user } = useAuth();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [caretakers, setCaretakers] = useState([]);
+  const [elders, setElders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [usingSampleData, setUsingSampleData] = useState(false);
   const [sortBy, setSortBy] = useState("recommended");
   const [showMap, setShowMap] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setElders([]);
+      return;
+    }
+    let cancelled = false;
+    api
+      .get("/users/me/elders")
+      .then((res) => {
+        if (!cancelled) {
+          setElders(Array.isArray(res.data) ? res.data : []);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to fetch elders for map view: ", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   // Debounce the free-text search field only. Other filters update immediately.
   const [debouncedSearch, setDebouncedSearch] = useState(filters.search);
@@ -528,7 +593,7 @@ const SearchPage = () => {
         setUsingSampleData(true);
         setError(
           err?.response?.data?.message ||
-            "Couldn't reach the server. Showing sample caretakers."
+          "Couldn't reach the server. Showing sample caretakers."
         );
       } finally {
         if (!cancelled) setLoading(false);
@@ -717,11 +782,10 @@ const SearchPage = () => {
                   <span>
                     {loading
                       ? "Searching…"
-                      : `${sortedCaretakers.length} ${
-                          sortedCaretakers.length === 1
-                            ? "caretaker"
-                            : "caretakers"
-                        } found`}
+                      : `${sortedCaretakers.length} ${sortedCaretakers.length === 1
+                        ? "caretaker"
+                        : "caretakers"
+                      } found`}
                   </span>
                   {usingSampleData && (
                     <Badge variant="warning">Sample data</Badge>
@@ -741,7 +805,7 @@ const SearchPage = () => {
 
             {showMap && (
               <div className="h-[420px] w-full">
-                <MapPanel caretakers={sortedCaretakers} />
+                <MapPanel caretakers={sortedCaretakers} elders={elders} />
               </div>
             )}
 

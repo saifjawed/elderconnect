@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import StarRating from "@/components/StarRating";
 import Navbar from "@/components/Navbar";
+import MapPicker from "@/components/MapPicker";
 
 const DAYS = [
   { key: "monday", label: "Monday" },
@@ -357,7 +358,7 @@ const CaretakerProfilePage = () => {
                       <div className="text-left sm:text-right">
                         <p className="text-xs text-gray-500">Hourly rate</p>
                         <p className="text-2xl font-bold text-teal-700">
-                          ${hourlyRate}
+                          ₹{hourlyRate}
                           <span className="text-sm font-medium text-gray-500">/hr</span>
                         </p>
                       </div>
@@ -526,6 +527,27 @@ const CaretakerProfilePage = () => {
                           </Badge>
                         ))}
                       </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {accountUser.address?.coordinates?.lat && accountUser.address?.coordinates?.lng && (
+                  <Card className="border-gray-200">
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-teal-600" />
+                        Location
+                      </CardTitle>
+                      <CardDescription>
+                         {accountUser.address.city ? `${accountUser.address.city}, ${accountUser.address.state || ""}` : "Caretaker location"}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <MapPicker
+                        lat={accountUser.address.coordinates.lat}
+                        lng={accountUser.address.coordinates.lng}
+                        readOnly={true}
+                      />
                     </CardContent>
                   </Card>
                 )}

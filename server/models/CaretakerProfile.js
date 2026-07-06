@@ -20,7 +20,16 @@ const caretakerProfileSchema = new mongoose.Schema({
   languages: [{ type: String }],
   rating: { type: Number, default: 0, min: 0, max: 5 },
   totalReviews: { type: Number, default: 0 },
-  isVerified: { type: Boolean, default: false },
+  verificationStatus: { 
+    type: String, 
+    enum: ['Pending', 'Submitted', 'Verified', 'Rejected'], 
+    default: 'Pending' 
+  },
+  kycDocuments: [{
+    docType: { type: String, enum: ['Aadhar', 'PAN', 'Other'], required: true },
+    url: { type: String, required: true },
+    publicId: { type: String, required: true }
+  }]
 }, { timestamps: true });
 
 const CaretakerProfile = mongoose.model('CaretakerProfile', caretakerProfileSchema);

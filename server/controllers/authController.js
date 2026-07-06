@@ -21,7 +21,6 @@ export const register = async (req, res) => {
       const lower = role.toLowerCase();
       if (lower === 'admin') normalizedRole = 'Admin';
       else if (lower === 'caretaker') normalizedRole = 'Caretaker';
-      else if (lower === 'elder') normalizedRole = 'Elder';
       else normalizedRole = 'Customer';
     }
 

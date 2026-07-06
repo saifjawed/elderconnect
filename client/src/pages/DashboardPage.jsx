@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import MapPicker from "@/components/MapPicker";
 import {
   AlertCircle,
   ArrowRight,
@@ -26,6 +27,9 @@ import {
   Users,
   X,
   XCircle,
+  User as UserIcon,
+  StickyNote,
+  Shield,
 } from "lucide-react";
 import { io } from "socket.io-client";
 import api from "@/services/api";
@@ -215,8 +219,10 @@ const StatCard = ({ icon: Icon, label, value, hint, tone = "default" }) => {
 };
 
 const BookingRow = ({ booking, onAction, actionLabel, actionVariant = "outline" }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const caretaker = booking.caretaker || {};
   const customer = booking.customer || {};
+  const elder = booking.elder || null;
   const caretakerName = getName(caretaker, "Caretaker");
   const customerName = getName(customer, "");
   const initials = getInitials(caretaker, "C");
@@ -225,15 +231,16 @@ const BookingRow = ({ booking, onAction, actionLabel, actionVariant = "outline" 
   const Icon = STATUS_ICON[status] || Clock;
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex min-w-0 items-start gap-3">
-        <Avatar className="h-10 w-10 shrink-0 ring-2 ring-white shadow-sm">
-          {caretaker.avatar ? (
-            <img src={caretaker.avatar} alt={caretakerName} className="h-full w-full object-cover" />
-          ) : (
-            <AvatarFallback>{initials}</AvatarFallback>
-          )}
-        </Avatar>
+    <div className="flex flex-col rounded-lg border border-gray-200 bg-white p-4 transition-all hover:shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <Avatar className="h-10 w-10 shrink-0 ring-2 ring-white shadow-sm">
+            {caretaker.avatar ? (
+              <img src={caretaker.avatar} alt={caretakerName} className="h-full w-full object-cover" />
+            ) : (
+              <AvatarFallback>{initials}</AvatarFallback>
+            )}
+          </Avatar>
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate text-sm font-semibold text-gray-900">{caretakerName}</p>
@@ -260,20 +267,86 @@ const BookingRow = ({ booking, onAction, actionLabel, actionVariant = "outline" 
           </div>
         </div>
       </div>
-      <div className="flex items-center justify-between gap-3 sm:justify-end">
-        <span className="text-sm font-bold text-teal-700">
-          ${Number(booking.totalAmount || 0).toFixed(2)}
-        </span>
-        {onAction && actionLabel && (
-          <Button
-            size="sm"
-            variant={actionVariant}
-            onClick={() => onAction(booking)}
-          >
-            {actionLabel}
-          </Button>
-        )}
+        <div className="flex items-center justify-between gap-3 sm:justify-end w-full sm:w-auto pt-2 sm:pt-0 mt-2 sm:mt-0 border-t sm:border-0 border-gray-100">
+          <span className="text-lg font-bold text-teal-700">
+            ₹{Number(booking.totalAmount || 0).toFixed(2)}
+          </span>
+          <div className="flex items-center gap-2">
+            {onAction && actionLabel && (
+              <Button
+                size="sm"
+                variant={actionVariant}
+                onClick={() => onAction(booking)}
+              >
+                {actionLabel}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="px-2 bg-gray-50 hover:bg-gray-100"
+            >
+              <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+            </Button>
+          </div>
+        </div>
       </div>
+      
+      {isExpanded && (
+        <div className="mt-4 border-t border-gray-100 pt-4 text-sm text-gray-700 flex flex-col sm:flex-row gap-6">
+          <div className="flex-1 flex flex-col gap-4">
+            {elder && (
+              <div className="flex gap-3">
+                {elder.avatar ? (
+                  <Avatar className="h-10 w-10 shrink-0 ring-1 ring-gray-200">
+                    <img src={elder.avatar} alt={elder.firstName} className="h-full w-full object-cover" />
+                  </Avatar>
+                ) : (
+                  <UserIcon className="h-4 w-4 shrink-0 text-teal-600 mt-0.5" />
+                )}
+                <div>
+                  <p className="font-semibold text-gray-900">Elder Profile</p>
+                  <p>{elder.firstName} {elder.lastName}</p>
+                  {elder.relation && <p className="text-xs text-gray-500">{elder.relation}</p>}
+                </div>
+              </div>
+            )}
+            {booking.address && (
+              <div className="flex gap-2">
+                <MapPin className="h-4 w-4 shrink-0 text-teal-600 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-gray-900">Location</p>
+                  <p>
+                    {[booking.address.street, booking.address.city, booking.address.state, booking.address.zipCode]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
+                </div>
+              </div>
+            )}
+            {booking.notes && (
+              <div className="flex gap-2">
+                <StickyNote className="h-4 w-4 shrink-0 text-teal-600 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-gray-900">Customer Note</p>
+                  <p className="whitespace-pre-wrap">{booking.notes}</p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {booking.address?.coordinates?.lat && booking.address?.coordinates?.lng && (
+            <div className="w-full sm:w-[300px] md:w-[350px] shrink-0 overflow-hidden rounded-md border border-gray-200">
+              <MapPicker 
+                readOnly 
+                lat={booking.address.coordinates.lat} 
+                lng={booking.address.coordinates.lng} 
+              />
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -297,7 +370,9 @@ const CustomerView = ({ bookings, loading }) => {
     street: "",
     city: "",
     state: "",
-    zipCode: ""
+    zipCode: "",
+    avatarFile: null,
+    avatarPreview: ""
   });
   const [modalSubmitting, setModalSubmitting] = useState(false);
   const [modalError, setModalError] = useState(null);
@@ -328,7 +403,11 @@ const CustomerView = ({ bookings, loading }) => {
       street: "",
       city: "",
       state: "",
-      zipCode: ""
+      zipCode: "",
+      lat: null,
+      lng: null,
+      avatarFile: null,
+      avatarPreview: ""
     });
     setModalError(null);
     setModalOpen(true);
@@ -344,7 +423,11 @@ const CustomerView = ({ bookings, loading }) => {
       street: elder.address?.street || "",
       city: elder.address?.city || "",
       state: elder.address?.state || "",
-      zipCode: elder.address?.zipCode || ""
+      zipCode: elder.address?.zipCode || "",
+      lat: elder.address?.coordinates?.lat || null,
+      lng: elder.address?.coordinates?.lng || null,
+      avatarFile: null,
+      avatarPreview: elder.avatar || ""
     });
     setModalError(null);
     setModalOpen(true);
@@ -354,6 +437,14 @@ const CustomerView = ({ bookings, loading }) => {
     e.preventDefault();
     if (!elderForm.firstName.trim() || !elderForm.lastName.trim()) {
       setModalError("First name and last name are required.");
+      return;
+    }
+    if (!elderForm.street.trim() || !elderForm.city.trim() || !elderForm.state.trim() || !elderForm.zipCode.trim()) {
+      setModalError("Please fill out the complete address for the elder.");
+      return;
+    }
+    if (elderForm.lat === null || elderForm.lng === null) {
+      setModalError("Please choose the elder's location on the map.");
       return;
     }
     setModalSubmitting(true);
@@ -368,15 +459,34 @@ const CustomerView = ({ bookings, loading }) => {
           street: elderForm.street.trim(),
           city: elderForm.city.trim(),
           state: elderForm.state.trim(),
-          zipCode: elderForm.zipCode.trim()
+          zipCode: elderForm.zipCode.trim(),
+          coordinates: {
+            lat: elderForm.lat ? Number(elderForm.lat) : null,
+            lng: elderForm.lng ? Number(elderForm.lng) : null
+          }
         }
       };
 
+      let savedElder;
       if (editingElder) {
-        await api.put(`/users/me/elders/${editingElder._id}`, payload);
+        const res = await api.put(`/users/me/elders/${editingElder._id}`, payload);
+        savedElder = res.data;
       } else {
-        await api.post("/users/me/elders", payload);
+        const res = await api.post("/users/me/elders", payload);
+        savedElder = res.data;
       }
+
+      if (elderForm.avatarFile) {
+        const formData = new FormData();
+        formData.append("avatar", elderForm.avatarFile);
+        await api.post(`/users/me/elders/${savedElder._id}/avatar`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else if (!elderForm.avatarPreview && editingElder?.avatar) {
+        // Handle avatar deletion if they cleared it
+        await api.delete(`/users/me/elders/${savedElder._id}/avatar`);
+      }
+
       setModalOpen(false);
       fetchElders();
     } catch (err) {
@@ -715,7 +825,7 @@ const CustomerView = ({ bookings, loading }) => {
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white p-6 shadow-2xl animate-in zoom-in-95 duration-200">
             <button
               type="button"
               onClick={() => setModalOpen(false)}
@@ -737,6 +847,44 @@ const CustomerView = ({ bookings, loading }) => {
                   {modalError}
                 </div>
               )}
+
+              <div className="flex flex-col items-center gap-3">
+                <Avatar className="h-20 w-20 ring-2 ring-gray-100 shadow-sm">
+                  {elderForm.avatarPreview ? (
+                    <img src={elderForm.avatarPreview} alt="Elder Preview" className="h-full w-full object-cover" />
+                  ) : (
+                    <AvatarFallback className="bg-teal-50 text-teal-700">
+                      <UserIcon className="h-10 w-10" />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    id="elderAvatar"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        setElderForm(prev => ({
+                          ...prev,
+                          avatarFile: file,
+                          avatarPreview: URL.createObjectURL(file)
+                        }));
+                      }
+                    }}
+                  />
+                  <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={() => document.getElementById('elderAvatar').click()}>
+                    Upload Photo
+                  </Button>
+                  {elderForm.avatarPreview && (
+                    <Button type="button" variant="ghost" size="sm" className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setElderForm(prev => ({ ...prev, avatarFile: null, avatarPreview: "" }))}>
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
@@ -827,6 +975,17 @@ const CustomerView = ({ bookings, loading }) => {
                     />
                   </div>
                 </div>
+                <div className="space-y-1 pt-1">
+                  <Label className="text-[10px]">Choose Elder Location on Map</Label>
+                  <MapPicker
+                    lat={elderForm.lat}
+                    lng={elderForm.lng}
+                    onChange={(lat, lng) => setElderForm(prev => ({ ...prev, lat, lng }))}
+                  />
+                  <p className="text-[9px] text-gray-500">
+                    Click on the map or use the locate button to pinpoint the elder's coordinates.
+                  </p>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
@@ -853,7 +1012,34 @@ const CustomerView = ({ bookings, loading }) => {
 
 const CaretakerView = ({ bookings, profile, loading, onStatusChange, refreshing }) => {
   const [reviewingId, setReviewingId] = useState(null);
+  const [kycFile, setKycFile] = useState(null);
+  const [kycDocType, setKycDocType] = useState("Aadhar");
+  const [kycSubmitting, setKycSubmitting] = useState(false);
+  const [kycError, setKycError] = useState(null);
   const navigate = useNavigate();
+
+  const handleKycSubmit = async (e) => {
+    e.preventDefault();
+    if (!kycFile) {
+      setKycError("Please select a document image to upload.");
+      return;
+    }
+    setKycSubmitting(true);
+    setKycError(null);
+    try {
+      const formData = new FormData();
+      formData.append("avatar", kycFile);
+      formData.append("docType", kycDocType);
+      await api.post("/caretakers/me/kyc", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      window.location.reload();
+    } catch (err) {
+      setKycError(err.response?.data?.message || "Upload failed");
+    } finally {
+      setKycSubmitting(false);
+    }
+  };
 
   const grouped = useMemo(() => {
     const pending = [];
@@ -934,6 +1120,62 @@ const CaretakerView = ({ bookings, profile, loading, onStatusChange, refreshing 
 
   return (
     <div className="space-y-6">
+      {profile?.verificationStatus === 'Pending' || profile?.verificationStatus === 'Rejected' ? (
+        <Card className="border-orange-200 bg-orange-50/50">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2 text-orange-800">
+              <Shield className="h-4 w-4" />
+              Verification Required
+            </CardTitle>
+            <CardDescription className="text-orange-700">
+              {profile?.verificationStatus === 'Rejected' 
+                ? "Your previous verification was rejected. Please upload valid KYC documents (Aadhar or PAN) to be listed in search results and accept bookings."
+                : "Please upload your KYC documents (Aadhar or PAN) to verify your identity. You will not appear in search results until verified."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleKycSubmit} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+              <div className="space-y-1 w-full sm:w-auto">
+                <Label htmlFor="kycDocType" className="text-xs text-orange-900">Document Type</Label>
+                <select 
+                  id="kycDocType" 
+                  value={kycDocType} 
+                  onChange={(e) => setKycDocType(e.target.value)}
+                  className="flex h-9 w-full sm:w-[150px] rounded-md border border-orange-200 bg-white px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:border-teal-500"
+                >
+                  <option value="Aadhar">Aadhar Card</option>
+                  <option value="PAN">PAN Card</option>
+                </select>
+              </div>
+              <div className="space-y-1 w-full sm:w-auto flex-1">
+                <Label htmlFor="kycFile" className="text-xs text-orange-900">Upload Image</Label>
+                <Input
+                  id="kycFile"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setKycFile(e.target.files[0])}
+                  className="bg-white border-orange-200 cursor-pointer h-9"
+                />
+              </div>
+              <Button type="submit" size="sm" className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 h-9" disabled={kycSubmitting}>
+                {kycSubmitting ? "Uploading..." : "Submit for Verification"}
+              </Button>
+            </form>
+            {kycError && <p className="mt-2 text-sm text-red-600">{kycError}</p>}
+          </CardContent>
+        </Card>
+      ) : profile?.verificationStatus === 'Submitted' ? (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardContent className="p-4 flex items-center gap-3 text-blue-800">
+            <Shield className="h-5 w-5 shrink-0" />
+            <div>
+              <p className="font-semibold text-sm">Verification Under Review</p>
+              <p className="text-xs mt-0.5 opacity-90">Your KYC documents have been submitted and are pending admin approval. You will be notified once verified.</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           icon={Inbox}

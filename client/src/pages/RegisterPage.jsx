@@ -13,6 +13,7 @@ import {
   Phone,
   UserCircle,
   ShieldCheck,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useAuth } from "@/contexts/useAuth";
+import MapPicker from "@/components/MapPicker";
 
 const ROLES = [
   { value: "Customer", label: "Customer (looking to book care)" },
@@ -37,6 +39,12 @@ const RegisterPage = () => {
     password: "",
     confirmPassword: "",
     role: "Customer",
+    street: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    lat: null,
+    lng: null,
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -60,6 +68,20 @@ const RegisterPage = () => {
       }
     }
 
+    if (formData.role === "Caretaker") {
+      const caretakerRequired = ["street", "city", "state", "zipCode"];
+      for (const field of caretakerRequired) {
+        if (!String(formData[field] || "").trim()) {
+          setError(`Please fill in the Caretaker ${field} field.`);
+          return;
+        }
+      }
+      if (formData.lat === null || formData.lng === null) {
+        setError("Please choose your caretaker location on the map.");
+        return;
+      }
+    }
+
     if (formData.password.length < 6) {
       setError("Password must be at least 6 characters long.");
       return;
@@ -79,7 +101,21 @@ const RegisterPage = () => {
     setLoading(true);
     try {
       // eslint-disable-next-line no-unused-vars
-      const { confirmPassword, ...payload } = formData;
+      const { confirmPassword, street, city, state, zipCode, lat, lng, ...payload } = formData;
+      
+      if (formData.role === "Caretaker") {
+        payload.address = {
+          street: street.trim(),
+          city: city.trim(),
+          state: state.trim(),
+          zipCode: zipCode.trim(),
+          coordinates: {
+            lat: lat ? Number(lat) : null,
+            lng: lng ? Number(lng) : null
+          }
+        };
+      }
+
       await register(payload);
       navigate("/");
     } catch (err) {
@@ -237,6 +273,85 @@ const RegisterPage = () => {
                   </Select>
                 </div>
               </div>
+
+              {formData.role === "Caretaker" && (
+                <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4 animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                    <MapPin className="h-4 w-4 text-teal-600" />
+                    Caretaker Location Details
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="street">Street Address</Label>
+                    <Input
+                      id="street"
+                      name="street"
+                      type="text"
+                      placeholder="123 Care Lane"
+                      value={formData.street}
+                      onChange={handleChange}
+                      disabled={loading}
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        name="city"
+                        type="text"
+                        placeholder="San Francisco"
+                        value={formData.city}
+                        onChange={handleChange}
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State</Label>
+                      <Input
+                        id="state"
+                        name="state"
+                        type="text"
+                        placeholder="CA"
+                        value={formData.state}
+                        onChange={handleChange}
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="zipCode">ZIP</Label>
+                      <Input
+                        id="zipCode"
+                        name="zipCode"
+                        type="text"
+                        placeholder="94110"
+                        value={formData.zipCode}
+                        onChange={handleChange}
+                        disabled={loading}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Choose Location on Map</Label>
+                    <MapPicker
+                      lat={formData.lat}
+                      lng={formData.lng}
+                      onChange={(lat, lng) =>
+                        setFormData((prev) => ({ ...prev, lat, lng }))
+                      }
+                    />
+                    <p className="text-[10px] text-gray-500">
+                      Click on the map or click the locate icon to set your coordinate location.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>

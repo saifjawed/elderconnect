@@ -6,6 +6,7 @@ import {
   CalendarCheck,
   Eye,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ const pickGradient = (seed) => {
 };
 
 const CaretakerCard = ({ caretaker, onBook, onViewProfile }) => {
+  const navigate = useNavigate();
   if (!caretaker) return null;
 
   const user = caretaker.user || {};
@@ -60,7 +62,7 @@ const CaretakerCard = ({ caretaker, onBook, onViewProfile }) => {
     }
     const userId = user._id || user.id || caretaker.user;
     if (userId) {
-      window.location.href = `/caretakers/${userId}`;
+      navigate(`/caretakers/${userId}`);
     }
   };
 
@@ -70,7 +72,7 @@ const CaretakerCard = ({ caretaker, onBook, onViewProfile }) => {
     } else {
       const userId = user._id || user.id || caretaker.user;
       if (userId) {
-        window.location.href = `/caretakers/${userId}/book`;
+        navigate(`/caretakers/${userId}/book`);
       }
     }
   };
@@ -131,7 +133,7 @@ const CaretakerCard = ({ caretaker, onBook, onViewProfile }) => {
           <div>
             <p className="text-xs text-gray-500">Hourly rate</p>
             <p className="text-xl font-bold text-teal-700">
-              ${hourlyRate}
+              ₹{hourlyRate}
               <span className="text-sm font-medium text-gray-500">/hr</span>
             </p>
           </div>
