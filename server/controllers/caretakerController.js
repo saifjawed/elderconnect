@@ -131,12 +131,13 @@ export const uploadKycDocument = async (req, res) => {
     const publicId = `kyc_${req.user.id}_${Date.now()}`;
     const result = await uploadBufferToCloudinary(req.file.buffer, publicId);
 
-    profile.kycDocuments.push({
+    profile.kycDocuments = [{
       docType,
       url: result.secure_url,
       publicId: result.public_id
-    });
+    }];
     profile.verificationStatus = 'Submitted';
+    profile.rejectionReason = '';
     await profile.save();
 
     res.json(profile);
@@ -181,7 +182,7 @@ export const deleteKycDocument = async (req, res) => {
 // PUT /api/caretakers/:id/verify (Admin only)
 export const verifyCaretaker = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, reason } = req.body;
     if (!['Verified', 'Rejected'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
     }
@@ -190,6 +191,12 @@ export const verifyCaretaker = async (req, res) => {
     if (!profile) return res.status(404).json({ message: 'Profile not found' });
 
     profile.verificationStatus = status;
+    if (status === 'Rejected' && reason) {
+      profile.rejectionReason = reason;
+    } else if (status === 'Verified') {
+      profile.rejectionReason = '';
+    }
+    
     await profile.save();
 
     res.json(profile);

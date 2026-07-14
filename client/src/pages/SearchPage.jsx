@@ -376,6 +376,7 @@ const EmptyState = ({ onClear }) => (
 );
 
 const MapPanel = ({ caretakers, elders = [] }) => {
+  const navigate = useNavigate();
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -439,6 +440,30 @@ const MapPanel = ({ caretakers, elders = [] }) => {
   }, []);
 
   useEffect(() => {
+    const handleMapClick = (e) => {
+      const link = e.target.closest('.caretaker-link');
+      if (link) {
+        e.preventDefault();
+        const userId = link.getAttribute('data-userid');
+        if (userId) {
+          navigate(`/caretakers/${userId}`);
+        }
+      }
+    };
+    
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('click', handleMapClick);
+    }
+    
+    return () => {
+      if (container) {
+        container.removeEventListener('click', handleMapClick);
+      }
+    };
+  }, [navigate]);
+
+  useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
@@ -469,7 +494,7 @@ const MapPanel = ({ caretakers, elders = [] }) => {
 
       marker.bindPopup(`
         <div style="font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; line-height: 1.4; color: #1f2937; padding: 2px;">
-          <div style="font-weight: 600; font-size: 14px; margin-bottom: 2px;">${name}</div>
+          <a href="/caretakers/${c.user?._id || c.user?.id}" data-userid="${c.user?._id || c.user?.id}" class="caretaker-link" style="font-weight: 600; font-size: 14px; margin-bottom: 2px; color: #0f766e; text-decoration: underline; cursor: pointer; display: block;">${name}</a>
           <div style="color: #4b5563; margin-bottom: 4px;">Caretaker</div>
           <div style="color: #4b5563; margin-bottom: 4px;">${c.user.address.city || ""}</div>
           <div style="font-weight: 550; color: #0f766e;">${c.hourlyRate ? `₹${c.hourlyRate}/hr` : ""}</div>

@@ -100,6 +100,8 @@ export const createBooking = async (req, res) => {
 
     const totalAmount = calculateTotal(profile.hourlyRate, startTime, endTime);
 
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
     const booking = await Booking.create({
       customer: req.user.id,
       elder: validatedElder,
@@ -108,6 +110,7 @@ export const createBooking = async (req, res) => {
       status: 'Pending',
       scheduledDate: new Date(scheduledDate),
       startTime,
+      otp,
       endTime,
       address,
       notes: notes || '',
@@ -148,7 +151,7 @@ export const getMyBookings = async (req, res) => {
     const bookings = await Booking.find(query)
       .populate('customer', 'firstName lastName avatar email phone')
       .populate('caretaker', 'firstName lastName avatar email phone')
-      .populate('elder', 'firstName lastName avatar')
+      .populate('elder', 'firstName lastName avatar phone')
       .sort({ scheduledDate: -1, createdAt: -1 });
 
     // Attach caretaker profile (hourlyRate, services, rating) for each booking
@@ -240,12 +243,18 @@ export const updateBookingStatus = async (req, res) => {
       }
     }
 
-    // Validate the transition is legal
     const allowedNext = statusTransitions[booking.status] || [];
     if (!allowedNext.includes(newStatus)) {
       return res.status(400).json({
         message: `Cannot transition from "${booking.status}" to "${newStatus}"`
       });
+    }
+
+    if (newStatus === 'In Progress') {
+      const { providedOtp } = req.body;
+      if (!providedOtp || providedOtp !== booking.otp) {
+        return res.status(400).json({ message: 'Invalid OTP provided for starting the service.' });
+      }
     }
 
     booking.status = newStatus;

@@ -37,7 +37,15 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import Navbar from "@/components/Navbar";
+import MapPicker from "@/components/MapPicker";
 
 const ROLE_FILTERS = [
   { value: "all", label: "All users" },
@@ -322,6 +330,18 @@ const AdminDashboardPage = () => {
 
   const [pendingVerifications, setPendingVerifications] = useState([]);
   const [verifyingId, setVerifyingId] = useState(null);
+  const [viewingProfile, setViewingProfile] = useState(null);
+  const [showMap, setShowMap] = useState(false);
+  const [rejectPrompt, setRejectPrompt] = useState({ open: false, profileId: null, reason: "" });
+
+  useEffect(() => {
+    if (viewingProfile) {
+      const timer = setTimeout(() => setShowMap(true), 300);
+      return () => clearTimeout(timer);
+    } else {
+      setShowMap(false);
+    }
+  }, [viewingProfile]);
 
   const [userFilter, setUserFilter] = useState("all");
   const [userSearch, setUserSearch] = useState("");
@@ -511,15 +531,20 @@ const AdminDashboardPage = () => {
     }
   };
 
-  const handleVerify = async (caretakerProfileId, status) => {
+  const handleVerify = async (caretakerProfileId, status, reason = '') => {
+    if (status === 'Rejected' && !reason) {
+      setRejectPrompt({ open: true, profileId: caretakerProfileId, reason: "" });
+      return;
+    }
     setVerifyingId(caretakerProfileId);
     try {
-      await api.put(`/caretakers/${caretakerProfileId}/verify`, { status });
+      await api.put(`/caretakers/${caretakerProfileId}/verify`, { status, reason });
       setPendingVerifications(prev => prev.filter(c => c._id !== caretakerProfileId));
     } catch (err) {
       setActionError("Failed to update verification status");
     } finally {
       setVerifyingId(null);
+      setRejectPrompt({ open: false, profileId: null, reason: "" });
     }
   };
 
@@ -743,6 +768,18 @@ const AdminDashboardPage = () => {
                             </a>
                           </div>
                         ))}
+                      </div>
+                      
+                      <div className="mb-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full border-teal-200 text-teal-700 hover:bg-teal-50"
+                          onClick={() => setViewingProfile(profile)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Profile Details
+                        </Button>
                       </div>
 
                       <div className="flex gap-2">
@@ -1034,6 +1071,136 @@ const AdminDashboardPage = () => {
           </Link>
         </div>
       </div>
+      
+      {/* Profile Details Sheet */}
+      <Sheet open={!!viewingProfile} onOpenChange={(open) => !open && setViewingProfile(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          {viewingProfile && (
+            <>
+              <SheetTitle>Caretaker Profile Details</SheetTitle>
+              <SheetDescription>
+                Detailed information submitted by the caretaker.
+              </SheetDescription>
+              <div className="mt-6 space-y-6">
+                <div>
+                  <h4 className="font-medium flex items-center gap-2 mb-2 text-gray-900">
+                    <UserCheck className="h-4 w-4" /> Personal Information
+                  </h4>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p><span className="font-medium text-gray-900">Name:</span> {getFullName(viewingProfile.user)}</p>
+                    <p><span className="font-medium text-gray-900">Email:</span> {viewingProfile.user?.email}</p>
+                    <p><span className="font-medium text-gray-900">Phone:</span> {viewingProfile.user?.phone || 'N/A'}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium flex items-center gap-2 mb-2 text-gray-900">
+                    <Briefcase className="h-4 w-4" /> Professional Details
+                  </h4>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p><span className="font-medium text-gray-900">Hourly Rate:</span> ₹{viewingProfile.hourlyRate}</p>
+                    <p><span className="font-medium text-gray-900">Experience:</span> {viewingProfile.experience} years</p>
+                    <p><span className="font-medium text-gray-900">Services:</span> {viewingProfile.services?.join(', ') || 'None selected'}</p>
+                    <p><span className="font-medium text-gray-900">Languages:</span> {viewingProfile.languages?.join(', ') || 'None selected'}</p>
+                  </div>
+                </div>
+
+                {viewingProfile.bio && (
+                  <div>
+                    <h4 className="font-medium mb-1 text-gray-900">Bio</h4>
+                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{viewingProfile.bio}</p>
+                  </div>
+                )}
+
+                <div>
+                  <h4 className="font-medium flex items-center gap-2 mb-2 text-gray-900">
+                    <MapPin className="h-4 w-4" /> Address & Location
+                  </h4>
+                  <div className="text-sm text-gray-600 space-y-1 mb-3">
+                    <p>{viewingProfile.user?.address?.street || 'No street'}</p>
+                    <p>{viewingProfile.user?.address?.city || 'No city'}, {viewingProfile.user?.address?.state || 'No state'} {viewingProfile.user?.address?.zipCode || ''}</p>
+                  </div>
+                  {viewingProfile.user?.address?.coordinates?.lat && viewingProfile.user?.address?.coordinates?.lng && (
+                    <div className="h-48 w-full rounded overflow-hidden border">
+                      {showMap ? (
+                        <MapPicker 
+                          lat={viewingProfile.user.address.coordinates.lat} 
+                          lng={viewingProfile.user.address.coordinates.lng} 
+                          readOnly={true} 
+                        />
+                      ) : (
+                        <div className="h-full w-full bg-gray-100 animate-pulse flex items-center justify-center">
+                          <span className="text-gray-400 text-sm">Loading map...</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className="font-medium flex items-center gap-2 mb-2 text-gray-900">
+                    <Calendar className="h-4 w-4" /> Availability
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                    {['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].map(day => {
+                      const avail = viewingProfile.availability?.[day];
+                      return (
+                        <div key={day} className="flex justify-between border-b pb-1">
+                          <span className="capitalize">{day}</span>
+                          <span className={avail?.available ? 'text-teal-700 font-medium' : 'text-gray-400'}>
+                            {avail?.available ? `${avail.start} - ${avail.end}` : 'Off'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Rejection Prompt Modal */}
+      {rejectPrompt.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Reject Verification</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Please provide a reason for rejecting this caretaker's profile and KYC documents.
+            </p>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="rejectReason">Rejection Reason</Label>
+                <textarea
+                  id="rejectReason"
+                  rows={3}
+                  className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  placeholder="e.g., Document is blurry, Name does not match..."
+                  value={rejectPrompt.reason}
+                  onChange={(e) => setRejectPrompt(prev => ({ ...prev, reason: e.target.value }))}
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setRejectPrompt({ open: false, profileId: null, reason: "" })}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive"
+                  className="bg-red-600 hover:bg-red-700"
+                  onClick={() => handleVerify(rejectPrompt.profileId, 'Rejected', rejectPrompt.reason)}
+                  disabled={!rejectPrompt.reason.trim()}
+                >
+                  Confirm Rejection
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

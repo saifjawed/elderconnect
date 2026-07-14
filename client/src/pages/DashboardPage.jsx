@@ -219,6 +219,7 @@ const StatCard = ({ icon: Icon, label, value, hint, tone = "default" }) => {
 };
 
 const BookingRow = ({ booking, onAction, actionLabel, actionVariant = "outline" }) => {
+  const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
   const caretaker = booking.caretaker || {};
   const customer = booking.customer || {};
@@ -309,9 +310,37 @@ const BookingRow = ({ booking, onAction, actionLabel, actionVariant = "outline" 
                   <p className="font-semibold text-gray-900">Elder Profile</p>
                   <p>{elder.firstName} {elder.lastName}</p>
                   {elder.relation && <p className="text-xs text-gray-500">{elder.relation}</p>}
+                  {elder.phone && (
+                    <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
+                      <Phone className="h-3 w-3" /> {elder.phone}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
+            
+            {user?.role === 'Caretaker' && (customer.phone || customer.email) && (
+              <div className="flex gap-2">
+                <Phone className="h-4 w-4 shrink-0 text-teal-600 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-gray-900">Customer Contact</p>
+                  {customer.phone && <p>{customer.phone}</p>}
+                  {customer.email && <p className="text-xs text-gray-500">{customer.email}</p>}
+                </div>
+              </div>
+            )}
+
+            {user?.role === 'Customer' && (caretaker.phone || caretaker.email) && (
+              <div className="flex gap-2">
+                <Phone className="h-4 w-4 shrink-0 text-teal-600 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-gray-900">Caretaker Contact</p>
+                  {caretaker.phone && <p>{caretaker.phone}</p>}
+                  {caretaker.email && <p className="text-xs text-gray-500">{caretaker.email}</p>}
+                </div>
+              </div>
+            )}
+
             {booking.address && (
               <div className="flex gap-2">
                 <MapPin className="h-4 w-4 shrink-0 text-teal-600 mt-0.5" />
@@ -331,6 +360,16 @@ const BookingRow = ({ booking, onAction, actionLabel, actionVariant = "outline" 
                 <div>
                   <p className="font-semibold text-gray-900">Customer Note</p>
                   <p className="whitespace-pre-wrap">{booking.notes}</p>
+                </div>
+              </div>
+            )}
+            {user?.role === 'Customer' && booking.status === 'Accepted' && booking.otp && (
+              <div className="flex gap-2">
+                <Shield className="h-4 w-4 shrink-0 text-teal-600 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-gray-900">Start Service OTP</p>
+                  <p className="text-xl font-bold tracking-widest text-teal-700">{booking.otp}</p>
+                  <p className="text-xs text-gray-500">Provide this OTP to the caretaker to begin the service.</p>
                 </div>
               </div>
             )}
@@ -1120,7 +1159,24 @@ const CaretakerView = ({ bookings, profile, loading, onStatusChange, refreshing 
 
   return (
     <div className="space-y-6">
-      {profile?.verificationStatus === 'Pending' || profile?.verificationStatus === 'Rejected' ? (
+      {!profile ? (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2 text-amber-800">
+              <AlertCircle className="h-4 w-4" />
+              Profile Incomplete
+            </CardTitle>
+            <CardDescription className="text-amber-700">
+              Please complete your profile first and upload your KYC documents to verify your identity. You will not appear in search results until verified.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate("/caretaker/profile/edit")} className="bg-amber-600 hover:bg-amber-700 h-9" size="sm">
+              Complete Profile
+            </Button>
+          </CardContent>
+        </Card>
+      ) : profile?.verificationStatus === 'Pending' || profile?.verificationStatus === 'Rejected' ? (
         <Card className="border-orange-200 bg-orange-50/50">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2 text-orange-800">
@@ -1129,7 +1185,14 @@ const CaretakerView = ({ bookings, profile, loading, onStatusChange, refreshing 
             </CardTitle>
             <CardDescription className="text-orange-700">
               {profile?.verificationStatus === 'Rejected' 
-                ? "Your previous verification was rejected. Please upload valid KYC documents (Aadhar or PAN) to be listed in search results and accept bookings."
+                ? (
+                  <span className="block">
+                    <strong className="text-red-700 block mb-1">
+                      Verification Rejected: {profile?.rejectionReason || 'No reason provided.'}
+                    </strong>
+                    Please upload valid KYC documents (Aadhar or PAN) to apply again.
+                  </span>
+                )
                 : "Please upload your KYC documents (Aadhar or PAN) to verify your identity. You will not appear in search results until verified."}
             </CardDescription>
           </CardHeader>
@@ -1553,6 +1616,7 @@ const DashboardPage = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [toasts, setToasts] = useState([]);
+  const [startPrompt, setStartPrompt] = useState({ open: false, bookingId: null, otp: "" });
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -1681,16 +1745,25 @@ const DashboardPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const handleStatusChange = async (booking, newStatus) => {
+  const handleStatusChange = async (booking, newStatus, providedOtp = null) => {
     if (!booking?._id) return;
+    
+    if (newStatus === 'In Progress' && !providedOtp) {
+      setStartPrompt({ open: true, bookingId: booking._id, otp: "" });
+      return;
+    }
+
     try {
-      await api.put(`/bookings/${booking._id}/status`, { status: newStatus });
+      await api.put(`/bookings/${booking._id}/status`, { status: newStatus, providedOtp });
       pushToast({
         title: "Status updated",
         description: `Booking marked as ${newStatus}.`,
         type: newStatus === "Declined" ? "error" : "success",
       });
       fetchData({ silent: true });
+      if (newStatus === 'In Progress') {
+        setStartPrompt({ open: false, bookingId: null, otp: "" });
+      }
     } catch (err) {
       pushToast({
         title: "Update failed",
@@ -1832,6 +1905,46 @@ const DashboardPage = () => {
           <CustomerView bookings={bookings} loading={loading} />
         )}
       </div>
+
+      {/* Start Service OTP Modal */}
+      {startPrompt.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6 animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Start Service</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Please ask the customer for their 6-digit Start Service OTP.
+            </p>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="serviceOtp">6-Digit OTP</Label>
+                <Input
+                  id="serviceOtp"
+                  type="text"
+                  maxLength={6}
+                  placeholder="e.g. 123456"
+                  value={startPrompt.otp}
+                  onChange={(e) => setStartPrompt(prev => ({ ...prev, otp: e.target.value }))}
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStartPrompt({ open: false, bookingId: null, otp: "" })}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  className="bg-teal-600 hover:bg-teal-700"
+                  onClick={() => handleStatusChange({ _id: startPrompt.bookingId }, 'In Progress', startPrompt.otp)}
+                  disabled={startPrompt.otp.length < 5}
+                >
+                  Start Service
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -18,6 +18,7 @@ import {
   X,
   XCircle,
   ChevronDown,
+  Shield,
 } from "lucide-react";
 import api from "@/services/api";
 import { useAuth } from "@/contexts/useAuth";
@@ -249,6 +250,21 @@ const BookingCard = ({ booking, onCancel, onReview, onMessage, cancellingId }) =
             </div>
           )}
         </div>
+
+        {booking.status === 'Accepted' && booking.otp && (
+          <div className="mt-3 rounded-md border border-teal-100 bg-teal-50 px-3 py-2 text-sm">
+            <p className="flex items-start gap-1.5 font-semibold text-teal-900">
+              <Shield className="h-4 w-4 mt-0.5 shrink-0" />
+              Start Service OTP
+            </p>
+            <p className="mt-1 text-lg font-bold tracking-widest text-teal-700">
+              {booking.otp}
+            </p>
+            <p className="mt-1 text-xs text-teal-800">
+              Provide this OTP to the caretaker to begin the service.
+            </p>
+          </div>
+        )}
 
         {booking.notes && (
           <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm">

@@ -33,6 +33,7 @@ const bookingSchema = new mongoose.Schema({
   stripePaymentIntentId: { type: String, default: '' },
   isUrgent: { type: Boolean, default: false },
   completedAt: { type: Date, default: null },
+  otp: { type: String, default: '' },
 }, { timestamps: true });
 
 const Booking = mongoose.model('Booking', bookingSchema);

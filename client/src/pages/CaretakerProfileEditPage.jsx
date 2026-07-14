@@ -85,6 +85,19 @@ const CaretakerProfileEditPage = () => {
     sunday: { available: false, start: "09:00", end: "17:00" },
   });
 
+  const [customService, setCustomService] = useState("");
+
+  const handleAddCustomService = () => {
+    const trimmed = customService.trim();
+    if (trimmed && !profileInfo.services.includes(trimmed)) {
+      setProfileInfo((prev) => ({
+        ...prev,
+        services: [...prev.services, trimmed],
+      }));
+    }
+    setCustomService("");
+  };
+
   // Redirect if not Caretaker (or Admin)
   useEffect(() => {
     if (authLoading) return;
@@ -385,7 +398,7 @@ const CaretakerProfileEditPage = () => {
                   <MapPin className="h-4 w-4 text-teal-600" />
                   Primary Caretaker Address & Map Location
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="street">Street Address</Label>
                   <Input
@@ -479,7 +492,7 @@ const CaretakerProfileEditPage = () => {
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
+                  <Label htmlFor="hourlyRate">Hourly Rate (₹)</Label>
                   <div className="relative">
                     <Coins className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                     <Input
@@ -521,6 +534,31 @@ const CaretakerProfileEditPage = () => {
                       {s}
                     </label>
                   ))}
+                  {profileInfo.services.filter(s => !AVAILABLE_SERVICES.includes(s)).map((s) => (
+                    <label key={s} className="flex items-center gap-2.5 text-sm font-medium text-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={true}
+                        onChange={() => handleServiceToggle(s)}
+                        className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                      />
+                      {s} (Custom)
+                    </label>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <Input
+                    placeholder="Add custom service (e.g., Pet Care)"
+                    value={customService}
+                    onChange={(e) => setCustomService(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomService();
+                      }
+                    }}
+                  />
+                  <Button type="button" onClick={handleAddCustomService} variant="secondary">Add</Button>
                 </div>
               </div>
 
