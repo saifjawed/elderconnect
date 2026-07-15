@@ -163,7 +163,7 @@ const Navbar = () => {
 
       {/* Mobile sheet */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden h-screen w-screen">
+        <div className="fixed inset-0 z-[60] md:hidden h-screen w-screen">
           <div
             className="fixed inset-0 backdrop-blur-sm"
             style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
@@ -171,7 +171,7 @@ const Navbar = () => {
             aria-hidden="true"
           />
           <div
-            className="absolute right-0 top-0 h-full w-3/4 max-w-sm shadow-xl p-6 flex flex-col gap-4 z-50"
+            className="absolute right-0 top-0 h-full w-3/4 max-w-sm shadow-xl p-6 flex flex-col gap-4 z-[60]"
             style={{ backgroundColor: "#ffffff" }}
           >
             <button

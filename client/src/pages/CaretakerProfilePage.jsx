@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import api from "@/services/api";
 import { useAuth } from "@/contexts/useAuth";
+import { useChat } from "@/contexts/ChatContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -150,6 +151,7 @@ const CaretakerProfilePage = () => {
   const { caretakerUserId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { openChatWith } = useChat();
 
   const [profile, setProfile] = useState(null);
   const [reviewsData, setReviewsData] = useState({ reviews: [], pagination: null });
@@ -258,7 +260,11 @@ const CaretakerProfilePage = () => {
   };
 
   const handleMessage = () => {
-    navigate("/messages");
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    openChatWith(accountUser);
   };
 
   return (

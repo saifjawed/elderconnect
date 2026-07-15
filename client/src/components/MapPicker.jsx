@@ -134,7 +134,7 @@ const MapPicker = ({ lat, lng, onChange, readOnly = false }) => {
   };
 
   return (
-    <div className="relative w-full h-[250px] rounded-lg overflow-hidden border border-gray-300 shadow-inner bg-gray-50">
+    <div className="relative z-0 w-full h-[250px] rounded-lg overflow-hidden border border-gray-300 shadow-inner bg-gray-50">
       <div ref={containerRef} className="w-full h-full" />
       {!readOnly && onChange && (
         <button

@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Clock,
+  CreditCard,
   Heart,
   Inbox,
   LayoutDashboard,
@@ -34,6 +35,7 @@ import {
 import { io } from "socket.io-client";
 import api from "@/services/api";
 import { useAuth } from "@/contexts/useAuth";
+import { useChat } from "@/contexts/ChatContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -393,6 +395,7 @@ const BookingRow = ({ booking, onAction, actionLabel, actionVariant = "outline" 
 const CustomerView = ({ bookings, loading }) => {
   const [showRecent, setShowRecent] = useState(true);
   const navigate = useNavigate();
+  const { openChatWith } = useChat();
 
   // Elder management states
   const [elders, setElders] = useState([]);
@@ -669,6 +672,16 @@ const CustomerView = ({ bookings, loading }) => {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
+                {next.status === "Accepted" && next.paymentStatus === "Pending" && (
+                  <Button
+                    size="sm"
+                    className="bg-teal-600 hover:bg-teal-700 text-white shadow-sm"
+                    onClick={() => window.location.href = `/payment/${next._id}`}
+                  >
+                    <CreditCard className="h-4 w-4 mr-1.5" />
+                    Pay Now
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="outline"
@@ -679,13 +692,9 @@ const CustomerView = ({ bookings, loading }) => {
                 </Button>
                 <Button
                   size="sm"
-                  onClick={() =>
-                    navigate(
-                      `/messages?with=${next.caretaker?._id || ""}`
-                    )
-                  }
+                  onClick={() => openChatWith(next.caretaker)}
                 >
-                  <MessageSquare className="h-4 w-4" />
+                  <MessageSquare className="h-4 w-4 mr-1.5" />
                   Message
                 </Button>
               </div>
@@ -1480,6 +1489,7 @@ const CaretakerView = ({ bookings, profile, loading, onStatusChange, refreshing 
 
 const ElderView = ({ bookings, loading }) => {
   const navigate = useNavigate();
+  const { openChatWith } = useChat();
 
   const { past, assigned, next } = useMemo(() => {
     const sorted = [...bookings].sort(
@@ -1563,11 +1573,9 @@ const ElderView = ({ bookings, loading }) => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() =>
-                  navigate(`/messages?with=${next.caretaker?._id || ""}`)
-                }
+                onClick={() => openChatWith(next.caretaker)}
               >
-                <MessageSquare className="h-4 w-4" />
+                <MessageSquare className="h-4 w-4 mr-1.5" />
                 Message
               </Button>
             </div>

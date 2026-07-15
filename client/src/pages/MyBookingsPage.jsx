@@ -19,9 +19,11 @@ import {
   XCircle,
   ChevronDown,
   Shield,
+  CreditCard,
 } from "lucide-react";
 import api from "@/services/api";
 import { useAuth } from "@/contexts/useAuth";
+import { useChat } from "@/contexts/ChatContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -283,6 +285,16 @@ const BookingCard = ({ booking, onCancel, onReview, onMessage, cancellingId }) =
             Created {formatDateTime(booking.createdAt)}
           </p>
           <div className="flex flex-wrap gap-2">
+            {booking.status === "Accepted" && booking.paymentStatus === "Pending" && (
+              <Button
+                size="sm"
+                className="bg-teal-600 hover:bg-teal-700 text-white shadow-sm"
+                onClick={() => window.location.href = `/payment/${booking._id}`}
+              >
+                <CreditCard className="h-4 w-4 mr-1.5" />
+                Pay Now
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -467,6 +479,7 @@ const ReviewModal = ({ booking, onClose, onSubmit, submitting, error }) => {
 const MyBookingsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { openChatWith } = useChat();
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(Boolean(user));
@@ -614,8 +627,8 @@ const MyBookingsPage = () => {
   };
 
   const handleMessage = (booking) => {
-    const caretakerId = booking.caretaker?._id || booking.caretaker;
-    if (caretakerId) navigate(`/messages?with=${caretakerId}`);
+    const targetUser = user?.role === 'Caretaker' ? booking.customer : booking.caretaker;
+    if (targetUser) openChatWith(targetUser);
   };
 
   const handleClearFilters = () => {
@@ -662,7 +675,9 @@ const MyBookingsPage = () => {
               Manage upcoming care visits and review past bookings.
             </p>
           </div>
-          <Button onClick={() => navigate("/search")}>Book another</Button>
+          {user?.role !== 'Caretaker' && (
+            <Button onClick={() => navigate("/search")}>Book another</Button>
+          )}
         </div>
 
         {actionError && (

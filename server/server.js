@@ -10,6 +10,8 @@ import userRoutes from './routes/userRoutes.js';
 import caretakerRoutes from './routes/caretakerRoutes.js';
 import bookingRoutes from './routes/bookingRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 import { initSocket } from './socket/socket.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -39,6 +41,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/caretakers', caretakerRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

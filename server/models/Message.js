@@ -4,7 +4,9 @@ const messageSchema = new mongoose.Schema({
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   booking: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking', default: null },
-  content: { type: String, required: true },
+  content: { type: String, default: '' },
+  imageUrl: { type: String, default: '' },
+  imagePublicId: { type: String, default: '' },
   isRead: { type: Boolean, default: false },
 }, { timestamps: true });
 
