@@ -134,7 +134,7 @@ const isUpcoming = (booking) => {
   return ts >= Date.now();
 };
 
-const BookingCard = ({ booking, onCancel, onReview, onMessage, cancellingId }) => {
+const BookingCard = ({ booking, onCancel, onReview, onMessage, cancellingId, userRole }) => {
   const caretaker = booking.caretaker || {};
   const caretakerName = `${caretaker.firstName || ""} ${caretaker.lastName || ""}`.trim() || "Caretaker";
   const initials = `${(caretaker.firstName || "")[0] || ""}${(caretaker.lastName || "")[0] || ""}`.toUpperCase() || "C";
@@ -303,7 +303,7 @@ const BookingCard = ({ booking, onCancel, onReview, onMessage, cancellingId }) =
               <MessageSquare className="h-4 w-4" />
               Message
             </Button>
-            {booking.status === "Completed" && (
+            {booking.status === "Completed" && userRole === "Customer" && (
               <Button variant="outline" size="sm" onClick={() => onReview(booking)}>
                 <StarRating rating={0} size="xs" />
                 Leave review
@@ -818,6 +818,7 @@ const MyBookingsPage = () => {
                       onReview={handleReview}
                       onMessage={handleMessage}
                       cancellingId={cancellingId}
+                      userRole={user?.role}
                     />
                   ))}
                 </div>
@@ -842,6 +843,7 @@ const MyBookingsPage = () => {
                       onReview={handleReview}
                       onMessage={handleMessage}
                       cancellingId={cancellingId}
+                      userRole={user?.role}
                     />
                   ))}
                 </div>

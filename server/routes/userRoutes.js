@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { getMe, updateMe, getAllUsers, getUserById, deleteUser, getMyElders, addElder, updateElder, deleteElder, uploadUserAvatar, deleteUserAvatar, uploadElderAvatar, deleteElderAvatar } from '../controllers/userController.js';
+import { getMe, updateMe, getAllUsers, getUserById, deleteUser, getMyElders, addElder, updateElder, deleteElder, uploadUserAvatar, deleteUserAvatar, uploadElderAvatar, deleteElderAvatar, getSupportAdmin } from '../controllers/userController.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 import { uploadAvatar, MAX_AVATAR_BYTES } from '../middleware/upload.js';
 
@@ -35,6 +35,8 @@ router.put('/me/elders/:elderId', authenticate, updateElder);
 router.delete('/me/elders/:elderId', authenticate, deleteElder);
 router.post('/me/elders/:elderId/avatar', authenticate, handleAvatarUpload, uploadElderAvatar);
 router.delete('/me/elders/:elderId/avatar', authenticate, deleteElderAvatar);
+
+router.get('/support-admin', authenticate, getSupportAdmin);
 
 router.get('/', authenticate, authorize('Admin'), getAllUsers);
 router.get('/:id', authenticate, authorize('Admin'), getUserById);

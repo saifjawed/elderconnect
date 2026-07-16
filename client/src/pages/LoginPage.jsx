@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/useAuth";
+import Logo from "@/components/Logo";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -69,9 +70,7 @@ const LoginPage = () => {
 
         <div className="flex justify-center mb-6">
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 shadow-md">
-              <Heart className="h-5 w-5 text-white" fill="white" />
-            </div>
+            <Logo className="h-10 w-10" />
             <span className="text-2xl font-bold text-gray-900">ElderConnect</span>
           </Link>
         </div>

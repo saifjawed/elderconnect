@@ -4,13 +4,28 @@ import { Heart, Menu, User, LogOut, LayoutDashboard, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/useAuth";
+import Logo from "@/components/Logo";
+import { useChat } from "@/contexts/ChatContext";
+import api from "@/services/api";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const { openChatWith, isWidgetOpen } = useChat();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+
+  const handleSupportClick = async () => {
+    try {
+      const res = await api.get('/users/support-admin');
+      openChatWith(res.data);
+      setMobileOpen(false); // Close mobile menu if open
+    } catch (err) {
+      console.error("Failed to connect to support", err);
+      alert("Support is currently unavailable.");
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -47,9 +62,7 @@ const Navbar = () => {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           {/* Logo */}
           <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 shadow-sm">
-              <Heart className="h-5 w-5 text-white" fill="white" />
-            </div>
+            <Logo className="h-9 w-9" />
             <span className="text-xl font-bold text-gray-900">ElderConnect</span>
           </Link>
 
@@ -76,12 +89,14 @@ const Navbar = () => {
                   <>
                     <NavLink to="/search" className={navLinkClass}>Find Caretaker</NavLink>
                     <NavLink to="/my-bookings" className={navLinkClass}>My Bookings</NavLink>
+                    <button onClick={handleSupportClick} className="text-sm font-medium text-gray-700 hover:text-teal-700 transition-colors">Support</button>
                   </>
                 )}
                 {user.role === "Caretaker" && (
                   <>
                     <NavLink to="/my-bookings" className={navLinkClass}>My Bookings</NavLink>
                     <NavLink to="/caretaker/profile/edit" className={navLinkClass}>My Profile</NavLink>
+                    <button onClick={handleSupportClick} className="text-sm font-medium text-gray-700 hover:text-teal-700 transition-colors">Support</button>
                   </>
                 )}
                 {user.role === "Admin" && (
@@ -183,9 +198,7 @@ const Navbar = () => {
               <X className="h-5 w-5" />
             </button>
             <Link to={user ? "/dashboard" : "/"} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 mt-8 hover:opacity-80 transition-opacity">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600">
-                <Heart className="h-5 w-5 text-white" fill="white" />
-              </div>
+              <Logo className="h-9 w-9" />
               <span className="text-xl font-bold text-gray-900">ElderConnect</span>
             </Link>
             <nav className="flex flex-col gap-2 mt-4">
@@ -245,12 +258,14 @@ const Navbar = () => {
                     <>
                       <Link to="/search" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Find Caretaker</Link>
                       <Link to="/my-bookings" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">My Bookings</Link>
+                      <button onClick={handleSupportClick} className="text-left rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Support</button>
                     </>
                   )}
                   {user.role === "Caretaker" && (
                     <>
                       <Link to="/my-bookings" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">My Bookings</Link>
                       <Link to="/caretaker/profile/edit" onClick={() => setMobileOpen(false)} className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">My Profile</Link>
+                      <button onClick={handleSupportClick} className="text-left rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100">Support</button>
                     </>
                   )}
                   {user.role === "Admin" && (

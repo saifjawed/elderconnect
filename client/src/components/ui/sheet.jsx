@@ -40,7 +40,7 @@ const SheetContent = React.forwardRef(({ side = "right", className, children, ..
   const { open, setOpen } = React.useContext(SheetContext);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-[9999]">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={() => setOpen(false)}

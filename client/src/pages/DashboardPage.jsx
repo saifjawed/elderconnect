@@ -1168,7 +1168,11 @@ const CaretakerView = ({ bookings, profile, loading, onStatusChange, refreshing 
 
   return (
     <div className="space-y-6">
-      {!profile ? (
+      {loading && !profile ? (
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+        </div>
+      ) : !profile ? (
         <Card className="border-amber-200 bg-amber-50/50">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2 text-amber-800">
@@ -1248,7 +1252,14 @@ const CaretakerView = ({ bookings, profile, loading, onStatusChange, refreshing 
         </Card>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <StatCard
+          icon={CreditCard}
+          label="Total Earnings"
+          value={`₹${grouped.completed.reduce((sum, b) => sum + (b.totalAmount || 0), 0)}`}
+          tone="success"
+          hint="From completed"
+        />
         <StatCard
           icon={Inbox}
           label="Pending requests"

@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
+import Logo from "@/components/Logo";
 
 const features = [
   {
@@ -208,9 +209,7 @@ const LandingPage = () => {
                   <CardContent className="p-8">
                     <div className={`transition-all duration-300 transform ${fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
                       <div className="flex items-center gap-4 mb-6">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 shadow-md">
-                          <Heart className="h-7 w-7 text-white" fill="white" />
-                        </div>
+                        <Logo className="h-14 w-14" />
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">{activeReview.title}</h3>
                           <div className="flex items-center gap-1 mt-1">
@@ -380,9 +379,7 @@ const LandingPage = () => {
           <div className="grid gap-8 md:grid-cols-4">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600">
-                  <Heart className="h-5 w-5 text-white" fill="white" />
-                </div>
+                <Logo className="h-9 w-9" />
                 <span className="text-xl font-bold text-white">ElderConnect</span>
               </div>
               <p className="text-sm text-gray-400 leading-relaxed">

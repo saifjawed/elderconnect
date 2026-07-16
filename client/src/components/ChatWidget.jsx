@@ -141,9 +141,20 @@ const ChatWidget = () => {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
               )}
+              {activeChatUser && (
+                <Avatar className="h-8 w-8 border border-white/25 shadow-sm shrink-0 bg-white">
+                  {activeChatUser.avatar ? (
+                    <img src={activeChatUser.avatar} alt="Avatar" className="h-full w-full object-cover rounded-full" />
+                  ) : (
+                    <AvatarFallback className="bg-teal-100 text-teal-700 text-xs font-bold">
+                      {activeChatUser.role === 'Admin' ? 'S' : `${activeChatUser.firstName?.[0] || ''}${activeChatUser.lastName?.[0] || ''}`}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+              )}
               <h3 className="font-semibold text-lg">
                 {activeChatUser 
-                  ? `${activeChatUser.firstName} ${activeChatUser.lastName}` 
+                  ? (activeChatUser.role === 'Admin' ? 'Support' : `${activeChatUser.firstName} ${activeChatUser.lastName}`) 
                   : 'Messages'}
               </h3>
             </div>
@@ -183,14 +194,14 @@ const ChatWidget = () => {
                           <img src={conv.partner.avatar} alt="Avatar" className="object-cover" />
                         ) : (
                           <AvatarFallback className="bg-teal-100 text-teal-700">
-                            {conv.partner.firstName?.[0]}{conv.partner.lastName?.[0]}
+                            {conv.partner.role === 'Admin' ? 'S' : `${conv.partner.firstName?.[0] || ''}${conv.partner.lastName?.[0] || ''}`}
                           </AvatarFallback>
                         )}
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-baseline">
                           <p className={`font-semibold truncate ${conv.unreadCount > 0 ? 'text-teal-700' : 'text-gray-900'}`}>
-                            {conv.partner.firstName} {conv.partner.lastName}
+                            {conv.partner.role === 'Admin' ? 'Support' : `${conv.partner.firstName} ${conv.partner.lastName}`}
                           </p>
                         </div>
                         <p className={`text-xs truncate mt-0.5 ${conv.unreadCount > 0 ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>

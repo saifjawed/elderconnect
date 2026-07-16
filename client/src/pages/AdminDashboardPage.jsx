@@ -159,13 +159,13 @@ const SimpleBarChart = ({ data, valueKey = "value", labelKey = "label", accent =
     rose: "bg-gradient-to-t from-rose-500 to-pink-500",
   };
   return (
-    <div className="flex h-40 items-end gap-3 sm:gap-4">
+    <div className="flex h-40 items-stretch gap-3 sm:gap-4">
       {data.map((d, i) => {
         const v = Number(d[valueKey]) || 0;
         const pct = Math.max(2, Math.round((v / max) * 100));
         return (
           <div key={`${d[labelKey]}-${i}`} className="flex flex-1 flex-col items-center gap-1">
-            <div className="relative flex h-full w-full items-end">
+            <div className="relative flex flex-1 w-full items-end">
               <div
                 className={`w-full rounded-t-md ${accentClasses[accent] || accentClasses.teal}`}
                 style={{ height: `${pct}%` }}

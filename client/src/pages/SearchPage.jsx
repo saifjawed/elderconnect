@@ -183,6 +183,7 @@ const FilterContent = ({
   filters,
   setFilters,
   cities,
+  services = SERVICE_OPTIONS,
   onClear,
   onApply,
   variant = "sidebar",
@@ -216,7 +217,7 @@ const FilterContent = ({
           onChange={(e) => handleChange("serviceType", e.target.value)}
         >
           <option value="">All services</option>
-          {SERVICE_OPTIONS.map((s) => (
+          {services.map((s) => (
             <option key={s} value={s}>
               {s}
             </option>
@@ -653,6 +654,16 @@ const SearchPage = () => {
     return Array.from(set).sort();
   }, [caretakers]);
 
+  const availableServices = useMemo(() => {
+    const set = new Set(SERVICE_OPTIONS);
+    caretakers.forEach((c) => {
+      if (Array.isArray(c.services)) {
+        c.services.forEach((s) => s && set.add(s));
+      }
+    });
+    return Array.from(set).sort();
+  }, [caretakers]);
+
   const filteredCaretakers = useMemo(() => {
     const search = debouncedSearch.trim().toLowerCase();
     if (!search) return caretakers;
@@ -741,6 +752,7 @@ const SearchPage = () => {
                   filters={filters}
                   setFilters={setFilters}
                   cities={availableCities}
+                  services={availableServices}
                   onClear={handleClear}
                 />
               </CardContent>
@@ -875,6 +887,7 @@ const SearchPage = () => {
             filters={filters}
             setFilters={setFilters}
             cities={availableCities}
+            services={availableServices}
             onClear={handleClear}
             onApply={() => setShowMobileFilters(false)}
             variant="sheet"

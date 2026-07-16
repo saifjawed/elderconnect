@@ -74,6 +74,20 @@ export const getUserById = async (req, res) => {
   }
 };
 
+// GET /api/users/support-admin (authenticated users)
+export const getSupportAdmin = async (req, res) => {
+  try {
+    // Find the first admin user
+    const admin = await User.findOne({ role: 'Admin' }).select('_id firstName lastName name avatar role');
+    if (!admin) {
+      return res.status(404).json({ message: 'No support admin available at the moment.' });
+    }
+    res.json(admin);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving support admin' });
+  }
+};
+
 // DELETE /api/users/:id (admin only) — deletes the user and their caretaker profile
 export const deleteUser = async (req, res) => {
   try {
