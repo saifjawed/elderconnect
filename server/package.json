@@ -1,7 +1,7 @@
 {
-  "name": "elderconnect-server",
+  "name": "nestlife-server",
   "version": "1.0.0",
-  "description": "ElderConnect API server - elder care booking platform",
+  "description": "NestLife API server - elder care booking platform",
   "type": "module",
   "main": "server.js",
   "scripts": {

@@ -4,7 +4,7 @@ import User from '../models/User.js';
 import cloudinary, { isCloudinaryConfigured } from '../config/cloudinary.js';
 import { getIO } from '../socket/socket.js';
 
-const MESSAGE_FOLDER = 'elderconnect/messages';
+const MESSAGE_FOLDER = 'nestlife/messages';
 
 const uploadBufferToCloudinary = (buffer) =>
   new Promise((resolve, reject) => {

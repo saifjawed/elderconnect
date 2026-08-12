@@ -155,7 +155,7 @@ const RegisterPage = () => {
         <div className="flex justify-center mb-6">
           <Link to="/" className="flex items-center gap-2">
             <Logo className="h-10 w-10" />
-            <span className="text-2xl font-bold text-gray-900">ElderConnect</span>
+            <span className="text-2xl font-bold text-gray-900">NestLife</span>
           </Link>
         </div>
 
@@ -163,7 +163,7 @@ const RegisterPage = () => {
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl">Create your account</CardTitle>
             <CardDescription>
-              Join ElderConnect to find care or offer your services
+              Join NestLife to find care or offer your services
             </CardDescription>
           </CardHeader>
           <CardContent>

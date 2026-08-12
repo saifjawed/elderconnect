@@ -236,7 +236,7 @@ const RazorpayPaymentPage = () => {
         key: order.key_id, // RAZORPAY_KEY_ID from backend
         amount: order.amount,
         currency: order.currency,
-        name: "ElderConnect",
+        name: "NestLife",
         description: `Payment for booking ${booking._id}`,
         order_id: order.order_id,
         handler: async function (response) {

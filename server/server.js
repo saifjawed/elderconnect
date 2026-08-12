@@ -46,7 +46,7 @@ app.use('/api/messages', messageRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'ElderConnect API is running' });
+  res.json({ status: 'ok', message: 'NestLife API is running' });
 });
 
 const server = http.createServer(app);

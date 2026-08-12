@@ -3,7 +3,7 @@ import CaretakerProfile from '../models/CaretakerProfile.js';
 import Review from '../models/Review.js';
 import cloudinary, { isCloudinaryConfigured } from '../config/cloudinary.js';
 
-const KYC_FOLDER = 'elderconnect/kyc';
+const KYC_FOLDER = 'nestlife/kyc';
 
 const uploadBufferToCloudinary = (buffer, publicId) =>
   new Promise((resolve, reject) => {

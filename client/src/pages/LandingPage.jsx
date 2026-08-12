@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/useAuth";
 import {
-  Heart,
   Shield,
   Clock,
   Map,
@@ -82,22 +81,22 @@ const REVIEWS = [
   {
     rating: 5,
     title: "Care that feels like family",
-    comment: "“ElderConnect helped us find a wonderful caretaker for my father. The booking was effortless, and the real-time updates gave us complete peace of mind.”",
-    name: "Sarah M.",
+    comment: "“NestLife helped us find a wonderful caretaker for my father. The booking was effortless, and the real-time updates gave us complete peace of mind.”",
+    name: "Priya S.",
     role: "Family member"
   },
   {
     rating: 5,
     title: "Very professional and caring",
-    comment: "“Alice was wonderful with my mother. Very professional and caring. The daily logs were extremely detailed and communicative.”",
-    name: "John D.",
+    comment: "“Anjali was wonderful with my mother. Very professional and caring. The daily logs were extremely detailed and communicative.”",
+    name: "Rahul M.",
     role: "Family member"
   },
   {
     rating: 5,
     title: "Lifesaver for our family",
-    comment: "“Finding a caregiver who understood dementia was tough until we used ElderConnect. The platform matched us with a certified specialist in hours.”",
-    name: "Emily R.",
+    comment: "“Finding a caregiver who understood dementia was tough until we used NestLife. The platform matched us with a certified specialist in hours.”",
+    name: "Neha K.",
     role: "Daughter"
   }
 ];
@@ -257,7 +256,7 @@ const LandingPage = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 md:py-28">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              Why families choose ElderConnect
+              Why families choose NestLife
             </h2>
             <p className="mt-4 text-lg text-gray-600">
               Everything you need to find, book, and manage trusted elder care — all in one place.
@@ -292,7 +291,7 @@ const LandingPage = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 md:py-28">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              How ElderConnect works
+              How NestLife works
             </h2>
             <p className="mt-4 text-lg text-gray-600">
               Getting started takes just a few minutes. Here's what to expect.
@@ -341,7 +340,7 @@ const LandingPage = () => {
                   Ready to find the right caretaker?
                 </h2>
                 <p className="mt-4 text-lg text-teal-100">
-                  Join thousands of families who trust ElderConnect to care for the people they love most.
+                  Join thousands of families who trust NestLife to care for the people they love most.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 md:justify-end">
@@ -380,7 +379,7 @@ const LandingPage = () => {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Logo className="h-9 w-9" />
-                <span className="text-xl font-bold text-white">ElderConnect</span>
+                <span className="text-xl font-bold text-white">NestLife</span>
               </div>
               <p className="text-sm text-gray-400 leading-relaxed">
                 Compassionate, verified elder care for the people you love most.
@@ -407,7 +406,7 @@ const LandingPage = () => {
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
-                  hello@elderconnect.app
+                  hello@nestlife.app
                 </li>
                 <li className="flex items-center gap-2">
                   <Phone className="h-4 w-4" />
@@ -422,7 +421,7 @@ const LandingPage = () => {
           </div>
           <div className="mt-10 pt-8 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-gray-400">
-              &copy; {new Date().getFullYear()} ElderConnect. All rights reserved.
+              &copy; {new Date().getFullYear()} NestLife. All rights reserved.
             </p>
             <div className="flex items-center gap-4 text-sm text-gray-400">
               <a href="#" className="hover:text-white transition-colors">Privacy</a>

@@ -1,250 +1,172 @@
-# ElderConnect — Elder Care Booking Platform
+# NestLife — Elder Care Booking Platform
 
-A full-stack MERN platform for discovering, booking, and reviewing professional caretakers for elderly family members. Customers browse verified caretaker profiles, schedule visits, pay securely, and chat in real time. Caretakers manage their profiles, availability, and bookings. Admins oversee the marketplace.
+NestLife is a comprehensive MERN stack platform designed to seamlessly connect families (Customers) with qualified, professional Caretakers for elderly care. The application supports detailed role-based access control, real-time location-based searching, integrated messaging, secure payment options, and service verification protocols.
 
-## Features
+---
 
-1. **Role-based authentication** — JWT login/register for Customer, Elder, Caretaker, and Admin roles.
-2. **Caretaker discovery and search** — Filter caretakers by city, service type, price, and rating.
-3. **Verified caretaker profiles** — Bios, certifications, hourly rate, languages, and weekly availability.
-4. **Interactive Leaflet map view** — Browse caretakers geographically across multiple cities.
-5. **Booking workflow** — Customers create bookings; caretakers accept/complete them with status transitions.
-6. **Calendar and availability checks** — Server-side validation against the caretaker's weekly schedule.
-7. **Stripe checkout** — Secure test-mode card payments with a dedicated Stripe payment page.
-8. **Reviews and ratings** — Customers leave 1–5 star reviews after a completed booking.
-9. **Real-time chat (Socket.io)** — Per-booking rooms with live message delivery and history.
-10. **Customer dashboard** — Track bookings, payments, and outstanding reviews at a glance.
-11. **Caretaker dashboard** — Manage incoming requests, schedule, and earnings.
-12. **Admin dashboard** — User management, role assignment, and platform oversight.
-13. **Responsive UI** — Tailwind CSS, accessible components, mobile-first layouts.
+## Core Features
 
-## Tech Stack
+1. **Role-Based Authentication**
+   - Secure register and login flows (JWT and bcryptjs) for **Customers**, **Caretakers**, and **Admins**.
+   - Custom dashboard views tailored to the logged-in role's daily operations.
 
-- **Frontend:** React 19, Vite, React Router, Tailwind CSS, Axios, Stripe.js, Leaflet, Socket.io Client
-- **Backend:** Node.js, Express 5, Mongoose 9, Socket.io 4, JWT, bcryptjs, Stripe SDK
-- **Database:** MongoDB (local or MongoDB Atlas)
-- **Tooling:** ESLint, Nodemon, MongoMemoryServer (seed)
+2. **Caretaker Discovery & Search (Map & Filters)**
+   - Find caretakers in real-time using a geographic map view powered by **Leaflet**.
+   - Filter caretakers by **City**, **Service Type** (including dynamically loaded custom caretaker services), **Hourly Rate**, and **Ratings**.
 
-## Prerequisites
+3. **Availability & Booking Engine**
+   - Caretakers define their weekly schedules (days and hours of availability).
+   - Customers choose care slots that are dynamically verified against the caretaker's availability.
+   - Core booking lifecycle statuses: `Pending` ➔ `Accepted` ➔ `In Progress` ➔ `Completed` / `Cancelled` / `Declined`.
 
-- Node.js v18 or higher
-- npm v9 or higher
-- MongoDB v6+ running locally, or a MongoDB Atlas connection string
-- A Stripe account (test keys) for the payment flow
-- Map views are powered by Leaflet & CartoDB tiles (no map api keys or accounts required)
+4. **Service Verification via OTP (Start Service)**
+   - A secure OTP handshake mechanism to verify that caretakers are physically present before commencing services.
+   - When a caretaker attempts to "Start Service," they must enter a 6-digit OTP that is only visible on the Customer's booking details page.
 
-## Installation
+5. **Integrated Razorpay Payments**
+   - Built-in test mode checkout flow using **Razorpay SDK** for processing digital payments.
+   - "Pay Now" options rendered on the Customer's dashboard and bookings list for accepted visits.
 
+6. **Real-time Chat with Support Integration**
+   - A floating **Socket.io** chat widget allowing real-time communication between customers and caretakers on active bookings.
+   - **Dedicated Support Chat**: Customers and caretakers can click "Support" in the navbar to open a chat directly with the platform Admin. The admin's profile avatar is shown in the chat header, disguised under the name **"Support"** for absolute brand consistency.
+
+7. **Reviews & Feedback System**
+   - Customers can rate caretakers from 1 to 5 stars and leave written feedback upon successful completion of a service.
+   - The caretaker's average rating and total reviews update dynamically.
+
+8. **Admin Operations**
+   - Manage all platform users, activate/suspend accounts, and delete records.
+   - Review caretaker verification and KYC applications to ensure only qualified caretakers are listed on the platform.
+   - Review platform-wide statistics (Bookings by Status and Monthly Revenue) visually mapped out on dashboard charts.
+
+---
+
+## User Workflows & System Lifecycles
+
+### 1. The Customer (Elder's Family) Workflow
+```mermaid
+graph TD
+    A[Register / Login] --> B[Search Caretakers on Map/Filters]
+    B --> C[Book Caretaker / Select Time & Date]
+    C --> D{Caretaker Action}
+    D -- Decline/Timeout --> B
+    D -- Accept --> E[Pay via Razorpay]
+    E --> F[Generate Start Service OTP]
+    F --> G[Share OTP with Caretaker at visit start]
+    G --> H[Caretaker Completes Service]
+    H --> I[Leave 1-5 Star Review]
+    H --> J[Open Support Chat if help needed]
+```
+
+- **Discovery:** Browse nearby caretakers on a Leaflet Map or filter by service categories.
+- **Booking:** Select an elder, date, start/end time, and add specific care instructions.
+- **Payment:** Once accepted, click **"Pay Now"** on the dashboard. Use test credit cards or simulated NetBanking on the Razorpay modal.
+- **Handshake:** At the start of the service, retrieve the secure **Start Service OTP** from the "My Bookings" page and tell it to the caretaker.
+- **Feedback:** Once complete, review the caretaker.
+
+---
+
+### 2. The Caretaker Workflow
+```mermaid
+graph TD
+    A[Setup Profile & Availability] --> B[Wait for KYC Approval]
+    B --> C[Receive Incoming Request]
+    C -- Decline --> D[Back to Queue]
+    C -- Accept --> E[Wait for Customer Payment]
+    E --> F[Arrive at Location]
+    F --> G[Request OTP from Customer & Enter it to 'Start']
+    G --> H[Provide Care & Click 'Complete']
+    H --> I[Earnings and Completed Stats Update]
+```
+- **Onboarding:** Create a detailed profile including specialized services, biography, hourly rates, and check off weekly availability.
+- **Requests:** Accept or decline incoming service requests in real time from the dashboard.
+- **Execution:** 
+  1. Once accepted and paid, travel to the location on the scheduled date.
+  2. Ask the customer for the **Start Service OTP** and input it to change the booking status to `In Progress`.
+  3. Perform the care and click **"Complete"** to finish.
+- **Analytics:** View total completed visits, average customer ratings, reviews, and a rolling calculation of **Total Earnings** directly on the dashboard.
+
+---
+
+### 3. The Support (Admin) Workflow
+- **User Audits:** View and suspend/unsuspend users or delete spam registrations.
+- **Verification Desk:** Review caretaker document submissions to approve or reject profiles.
+- **Analytics Desk:** Track bookings metrics (Pending, Accepted, In Progress, Completed, Cancelled) and monthly revenue distributions.
+- **Support Widget:** Receive incoming customer/caretaker support inquiries directly within the support chat widget and reply in real time.
+
+---
+
+## Tech Stack & Architecture
+
+- **Frontend Framework:** React 19, Vite, React Router DOM (v6), Tailwind CSS
+- **Backend Server:** Node.js, Express (v5), Socket.io (v4), Mongoose (v9)
+- **Database:** MongoDB
+- **Third-Party APIs:** Razorpay Payment Gateway, Leaflet Maps
+
+---
+
+## Local Development & Setup
+
+### 1. Prerequisites
+- Node.js v18+
+- MongoDB instance running locally (port 27017) or Atlas URI
+- Razorpay API Test Keys
+
+### 2. Install Dependencies
+Run npm installation in both directories:
 ```bash
-git clone <your-repo-url> elderconnect
-cd elderconnect
-
-# Backend
+# Install backend dependencies
 cd server
 npm install
-npm run seed
 
-# Frontend
+# Install frontend dependencies
 cd ../client
 npm install
 ```
 
-The seed script populates a rich set of demo users, caretaker profiles, bookings, and reviews using an in-memory MongoDB or your configured `MONGODB_URI`.
+### 3. Environment Setup
+Configure the environment variables in both directories:
 
-## Environment Variables
-
-Copy the example files and fill in your own secrets.
-
-### `server/.env.example`
-
+**`server/.env`:**
 ```env
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/elderconnect
-JWT_SECRET=your_jwt_secret_key_here
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+PORT=8000
+MONGODB_URI=mongodb://localhost:27017/nestlife
+JWT_SECRET=your_jwt_secret_here
+RAZORPAY_KEY_ID=rzp_test_TDW4I7EQYHeDMS
+RAZORPAY_KEY_SECRET=your_razorpay_secret_here
 CLIENT_URL=http://localhost:5173
 ```
 
-### `client/.env.example`
-
+**`client/.env`:**
 ```env
-VITE_API_URL=http://localhost:5000/api
-VITE_SOCKET_URL=http://localhost:5000
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
+VITE_API_URL=http://localhost:8000/api
+VITE_SOCKET_URL=http://localhost:8000
+VITE_RAZORPAY_KEY_ID=rzp_test_TDW4I7EQYHeDMS
 ```
 
-| Variable | Where | Purpose |
-| --- | --- | --- |
-| `PORT` | server | Express listen port |
-| `MONGODB_URI` | server | Mongo connection string |
-| `JWT_SECRET` | server | Signs and verifies auth tokens |
-| `STRIPE_SECRET_KEY` | server | Server-side Stripe calls |
-| `CLIENT_URL` | server | Allowed CORS origin for the deployed frontend |
-| `VITE_API_URL` | client | Base URL for REST calls |
-| `VITE_SOCKET_URL` | client | Socket.io server URL |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | client | Stripe.js publishable key |
-
-## Running Locally
-
-In two terminals:
-
+### 4. Seed Database (Optional)
+Run the seed script to pre-populate users, caretaker profiles, and reviews:
 ```bash
-# Terminal 1 — backend (port 5000)
+cd server
+npm run seed
+```
+
+### 5. Running the Application
+Spin up both local development environments:
+```bash
+# Start Express & Socket.io server (Terminal 1)
 cd server
 npm run dev
 
-# Terminal 2 — frontend (port 5173)
+# Start Vite React client dev server (Terminal 2)
 cd client
 npm run dev
 ```
 
-Open `http://localhost:5173` and sign in with one of the demo accounts below.
+Open your browser to `http://localhost:5173` to explore.
 
-## Production Build
-
-```bash
-cd client
-npm run build
-```
-
-This produces a static bundle in `client/dist` ready to deploy to any static host. The backend ships as plain Node ESM and is started with `node server.js` (see `npm start` in `server/package.json`).
-
-## Deployment Guide
-
-### Frontend — Vercel
-
-1. Push the repository to GitHub.
-2. In Vercel, **Import Project** and select the repo.
-3. Set **Root Directory** to `client`.
-4. Vercel auto-detects Vite. Override if needed:
-   - **Build Command:** `npm run build`
-   - **Output Directory:** `dist`
-5. Add the four `VITE_*` environment variables from `client/.env.example` in **Settings → Environment Variables**.
-6. The included `client/vercel.json` rewrites all routes to `index.html` so React Router works on hard refresh.
-
-### Backend — Railway or Render
-
-**Railway**
-
-1. **New Project → Deploy from GitHub repo.**
-2. Set **Root Directory** to `server`.
-3. Railway auto-detects Node. Confirm the start command is `npm start` (which runs `node server.js`).
-4. Add the five server environment variables from `server/.env.example`.
-5. Note the public URL (e.g. `https://elderconnect-api.up.railway.app`) and use it for the client's `VITE_API_URL` and `VITE_SOCKET_URL`.
-
-**Render**
-
-1. **New → Web Service**, connect the repo.
-2. **Root Directory:** `server`
-3. **Build Command:** `npm install`
-4. **Start Command:** `node server.js`
-5. Add the same five server env vars.
-6. Use a paid plan or set `Auto-Deploy` carefully — free web services spin down on idle.
-
-### Database — MongoDB Atlas
-
-1. Create a free Atlas cluster.
-2. Add a database user and whitelist `0.0.0.0/0` (or the platform's outbound IPs).
-3. Copy the connection string into `MONGODB_URI` for the backend service.
-4. Re-run `npm run seed` against Atlas to populate demo data, or seed locally first and import.
-
-### Connecting the Pieces
-
-After deploying both halves:
-
-1. Set the backend's `CLIENT_URL` to your deployed frontend origin (e.g. `https://elderconnect.vercel.app`).
-2. Set the frontend's `VITE_API_URL` to `https://<your-backend>/api` and `VITE_SOCKET_URL` to `https://<your-backend>`.
-3. Redeploy both services.
-
-## API Endpoints
-
-Base URL: `http://localhost:5000/api`
-
-### Auth
-
-| Method | Path | Auth | Description |
-| --- | --- | --- | --- |
-| POST | `/auth/register` | public | Create a new account |
-| POST | `/auth/login` | public | Sign in, returns JWT |
-| GET | `/auth/me` | bearer | Current user profile |
-
-### Users
-
-| Method | Path | Auth | Description |
-| --- | --- | --- | --- |
-| GET | `/users/me` | bearer | Get current user |
-| PUT | `/users/me` | bearer | Update current user |
-| GET | `/users` | Admin | List all users |
-| GET | `/users/:id` | Admin | Get user by id |
-| DELETE | `/users/:id` | Admin | Delete user |
-
-### Caretakers
-
-| Method | Path | Auth | Description |
-| --- | --- | --- | --- |
-| GET | `/caretakers` | public | List/search caretakers |
-| GET | `/caretakers/:id` | public | Caretaker detail |
-| POST | `/caretakers/profile` | Caretaker | Create profile |
-| PUT | `/caretakers/profile` | Caretaker | Update profile |
-| GET | `/caretakers/:userId/profile` | public | Public profile by user id |
-
-### Bookings
-
-| Method | Path | Auth | Description |
-| --- | --- | --- | --- |
-| POST | `/bookings` | Customer/Admin | Create a booking |
-| GET | `/bookings/my-bookings` | bearer | Current user's bookings |
-| GET | `/bookings/availability/:caretakerId` | bearer | Slots for a date |
-| GET | `/bookings/:id` | bearer | Booking detail |
-| PUT | `/bookings/:id/status` | bearer | Accept/complete/cancel |
-| DELETE | `/bookings/:id` | bearer | Cancel booking |
-
-### Reviews
-
-| Method | Path | Auth | Description |
-| --- | --- | --- | --- |
-| POST | `/reviews` | Customer/Admin | Leave a review |
-| GET | `/reviews/caretaker/:caretakerId` | bearer | Reviews for caretaker |
-| GET | `/reviews/booking/:bookingId` | bearer | Review for a booking |
-
-### Health
-
-| Method | Path | Auth | Description |
-| --- | --- | --- | --- |
-| GET | `/api/health` | public | Service heartbeat |
-
-
-## Project Structure
-
-```
-elderconnect/
-├── client/                  # Vite + React frontend
-│   ├── src/
-│   │   ├── components/      # Reusable UI (Navbar, CaretakerCard, StarRating, ui/)
-│   │   ├── pages/           # Route-level screens
-│   │   ├── contexts/        # Auth and chat providers
-│   │   ├── services/        # Axios API client
-│   │   ├── lib/             # Utilities
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── vercel.json
-│   └── .env.example
-└── server/                  # Express + Mongoose API
-    ├── config/              # DB connection
-    ├── controllers/         # Route handlers
-    ├── middleware/          # Auth and authorization
-    ├── models/              # Mongoose schemas
-    ├── routes/              # Express routers
-    ├── socket/              # Socket.io chat server
-    ├── seed.js              # Demo data seeder
-    ├── server.js            # App entry point
-    └── .env.example
-```
-
-## Screenshots
-
-_Add screenshots of the landing page, search page, caretaker profile, and dashboards here._
+---
 
 ## License
-
-MIT
+Distributed under the MIT License. See `LICENSE` for details.

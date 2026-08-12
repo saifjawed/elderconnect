@@ -63,7 +63,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
             <Logo className="h-9 w-9" />
-            <span className="text-xl font-bold text-gray-900">ElderConnect</span>
+            <span className="text-xl font-bold text-gray-900">NestLife</span>
           </Link>
 
           {/* Desktop nav */}
@@ -199,7 +199,7 @@ const Navbar = () => {
             </button>
             <Link to={user ? "/dashboard" : "/"} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 mt-8 hover:opacity-80 transition-opacity">
               <Logo className="h-9 w-9" />
-              <span className="text-xl font-bold text-gray-900">ElderConnect</span>
+              <span className="text-xl font-bold text-gray-900">NestLife</span>
             </Link>
             <nav className="flex flex-col gap-2 mt-4">
               {user && (

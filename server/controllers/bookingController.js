@@ -98,6 +98,31 @@ export const createBooking = async (req, res) => {
       }
     }
 
+    const newStartMin = parseTimeToMinutes(startTime);
+    const newEndMin = parseTimeToMinutes(endTime);
+
+    const requestedDateStr = new Date(scheduledDate).toISOString().split('T')[0];
+    const existingBookings = await Booking.find({
+      caretaker,
+      status: { $in: ['Pending', 'Accepted', 'In Progress'] }
+    });
+
+    const hasOverlap = existingBookings.some((booking) => {
+      const existingDateStr = new Date(booking.scheduledDate).toISOString().split('T')[0];
+      if (existingDateStr !== requestedDateStr) return false;
+
+      const existingStartMin = parseTimeToMinutes(booking.startTime);
+      const existingEndMin = parseTimeToMinutes(booking.endTime);
+
+      if (existingStartMin === null || existingEndMin === null) return false;
+
+      return newStartMin < existingEndMin && newEndMin > existingStartMin;
+    });
+
+    if (hasOverlap) {
+      return res.status(400).json({ message: 'The caretaker is already booked for the selected time slot.' });
+    }
+
     const totalAmount = calculateTotal(profile.hourlyRate, startTime, endTime);
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -163,6 +188,9 @@ export const getMyBookings = async (req, res) => {
 
     const enriched = bookings.map((b) => {
       const obj = b.toObject();
+      if (req.user.role === 'Caretaker') {
+        delete obj.otp;
+      }
       if (obj.caretaker && obj.caretaker._id) {
         obj.caretakerProfile = profileByUser.get(obj.caretaker._id.toString()) || null;
       }
@@ -197,7 +225,11 @@ export const getBookingById = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to view this booking' });
     }
 
-    res.json(booking);
+    const obj = booking.toObject();
+    if (req.user.role === 'Caretaker') {
+      delete obj.otp;
+    }
+    res.json(obj);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -251,6 +283,10 @@ export const updateBookingStatus = async (req, res) => {
     }
 
     if (newStatus === 'In Progress') {
+      if (booking.paymentStatus !== 'Paid') {
+        return res.status(400).json({ message: 'Customer must complete payment before the service can start.' });
+      }
+
       const { providedOtp } = req.body;
       if (!providedOtp || providedOtp !== booking.otp) {
         return res.status(400).json({ message: 'Invalid OTP provided for starting the service.' });
@@ -390,6 +426,43 @@ export const getCaretakerAvailability = async (req, res) => {
       hasOverlappingBooking: overlapping,
       conflictingBookings: overlapping ? sameDayBookings.length : 0,
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// GET /api/bookings/caretaker/:caretakerId/booked-slots
+export const getBookedSlots = async (req, res) => {
+  try {
+    const { caretakerId } = req.params;
+    const { date } = req.query;
+
+    if (!mongoose.Types.ObjectId.isValid(caretakerId)) {
+      return res.status(400).json({ message: 'Invalid caretaker id' });
+    }
+
+    const requestedDate = new Date(date);
+    if (Number.isNaN(requestedDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid date' });
+    }
+
+    const dayStart = new Date(requestedDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setDate(dayEnd.getDate() + 1);
+
+    const sameDayBookings = await Booking.find({
+      caretaker: caretakerId,
+      scheduledDate: { $gte: dayStart, $lt: dayEnd },
+      status: { $in: ['Pending', 'Accepted', 'In Progress'] }
+    });
+
+    const slots = sameDayBookings.map((b) => ({
+      startTime: b.startTime,
+      endTime: b.endTime
+    }));
+
+    res.json(slots);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

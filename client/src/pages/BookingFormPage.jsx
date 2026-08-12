@@ -313,6 +313,8 @@ const BookingFormPage = () => {
   const [eldersError, setEldersError] = useState(null);
   
   const [useElderAddress, setUseElderAddress] = useState(true);
+  const [bookedSlots, setBookedSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   // Load elders list
   useEffect(() => {
@@ -376,6 +378,43 @@ const BookingFormPage = () => {
     };
   }, [caretakerUserId]);
 
+  useEffect(() => {
+    if (!caretakerUserId || !formData.scheduledDate) {
+      setBookedSlots([]);
+      return;
+    }
+    let cancelled = false;
+    const fetchSlots = async () => {
+      setLoadingSlots(true);
+      try {
+        const res = await api.get(`/bookings/caretaker/${caretakerUserId}/booked-slots?date=${formData.scheduledDate}`);
+        if (cancelled) return;
+        setBookedSlots(res.data);
+      } catch (err) {
+        console.error("Failed to load booked slots", err);
+      } finally {
+        if (!cancelled) setLoadingSlots(false);
+      }
+    };
+    fetchSlots();
+    return () => {
+      cancelled = true;
+    };
+  }, [caretakerUserId, formData.scheduledDate]);
+
+  const hasOverlap = useMemo(() => {
+    if (!formData.startTime || !formData.endTime || bookedSlots.length === 0) return false;
+    const startMin = parseTimeToMinutes(formData.startTime);
+    const endMin = parseTimeToMinutes(formData.endTime);
+    if (startMin === null || endMin === null) return false;
+    return bookedSlots.some(slot => {
+      const bStart = parseTimeToMinutes(slot.startTime);
+      const bEnd = parseTimeToMinutes(slot.endTime);
+      if (bStart === null || bEnd === null) return false;
+      return startMin < bEnd && endMin > bStart;
+    });
+  }, [formData.startTime, formData.endTime, bookedSlots]);
+
   const profileServices = Array.isArray(profile?.services) ? profile.services : [];
   const availableServiceOptions = profileServices.length > 0 ? profileServices : SERVICE_OPTIONS;
 
@@ -418,6 +457,9 @@ const BookingFormPage = () => {
     if (!formData.endTime) return "Please choose an end time.";
     if (computeDurationHours(formData.startTime, formData.endTime) <= 0) {
       return "End time must be after start time.";
+    }
+    if (hasOverlap) {
+      return "The selected time overlaps with an existing booking.";
     }
     if (!useElderAddress) {
       if (!formData.street.trim() || !formData.city.trim()) {
@@ -710,6 +752,29 @@ const BookingFormPage = () => {
                         </div>
                       </div>
                     </div>
+
+                    {loadingSlots ? (
+                      <p className="text-sm text-gray-500 flex items-center gap-2 mt-3"><Loader2 className="h-4 w-4 animate-spin"/> Loading booked slots...</p>
+                    ) : bookedSlots.length > 0 ? (
+                      <div className="rounded bg-orange-50 p-3 border border-orange-100 mt-3">
+                        <p className="text-sm font-medium text-orange-800 mb-2 flex items-center gap-1.5"><AlertCircle className="h-4 w-4"/> Already Booked Slots:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {bookedSlots.map((slot, i) => (
+                            <Badge key={i} variant="outline" className="bg-white text-orange-700 border-orange-200">
+                              {formatTime12h(slot.startTime)} - {formatTime12h(slot.endTime)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ) : formData.scheduledDate && (
+                      <p className="text-sm text-emerald-600 flex items-center gap-1.5 mt-3"><Check className="h-4 w-4"/> No bookings on this date yet.</p>
+                    )}
+
+                    {hasOverlap && (
+                      <p className="text-sm text-red-600 flex items-center gap-1.5 mt-2 font-medium">
+                        <AlertCircle className="h-4 w-4"/> The selected time overlaps with an existing booking.
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">

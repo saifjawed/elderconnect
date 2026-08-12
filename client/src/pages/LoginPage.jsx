@@ -71,14 +71,14 @@ const LoginPage = () => {
         <div className="flex justify-center mb-6">
           <Link to="/" className="flex items-center gap-2">
             <Logo className="h-10 w-10" />
-            <span className="text-2xl font-bold text-gray-900">ElderConnect</span>
+            <span className="text-2xl font-bold text-gray-900">NestLife</span>
           </Link>
         </div>
 
         <Card className="shadow-xl border-gray-200">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl">Welcome back</CardTitle>
-            <CardDescription>Sign in to your ElderConnect account</CardDescription>
+            <CardDescription>Sign in to your NestLife account</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>

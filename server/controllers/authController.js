@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
 const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET || 'elderconnect_jwt_secret_key_2024', {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET || 'nestlife_jwt_secret_key_2024', {
     expiresIn: '7d',
   });
 };

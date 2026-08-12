@@ -25,6 +25,6 @@ export const isCloudinaryConfigured = Boolean(
   process.env.CLOUDINARY_API_SECRET
 );
 
-export const AVATAR_FOLDER = 'elderconnect/avatars';
+export const AVATAR_FOLDER = 'nestlife/avatars';
 
 export default cloudinary;

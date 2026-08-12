@@ -40,7 +40,7 @@ async function seed() {
     const admin = await User.create({
       firstName: 'Vikram',
       lastName: 'Singh',
-      email: 'admin@elderconnect.in',
+      email: 'admin@nestlife.in',
       password: 'admin123',
       role: 'Admin',
       phone: '+91-9876543210',
