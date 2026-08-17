@@ -79,6 +79,9 @@ const Navbar = () => {
                 <a href="/#how-it-works" className="text-sm font-medium text-gray-700 hover:text-teal-700 transition-colors">
                   How It Works
                 </a>
+                <NavLink to="/contact" className={navLinkClass}>
+                  Contact Us
+                </NavLink>
               </>
             ) : (
               <>
@@ -244,6 +247,13 @@ const Navbar = () => {
                   >
                     How It Works
                   </a>
+                  <Link
+                    to="/contact"
+                    onClick={() => setMobileOpen(false)}
+                    className="rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    Contact Us
+                  </Link>
                 </>
               ) : (
                 <>

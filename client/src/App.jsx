@@ -14,6 +14,7 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import RazorpayPaymentPage from "./pages/RazorpayPaymentPage";
 import CustomerProfileEditPage from "./pages/CustomerProfileEditPage";
 import CaretakerProfileEditPage from "./pages/CaretakerProfileEditPage";
+import ContactPage from "./pages/ContactPage";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/contact" element={<ContactPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/search" element={<SearchPage />} />
